@@ -131,6 +131,8 @@ class ThreadAdapter(
             findItem(R.id.cab_forward_message).isVisible = isOneItemSelected
             findItem(R.id.cab_select_text).isVisible = isOneItemSelected && hasText
             findItem(R.id.cab_properties).isVisible = isOneItemSelected
+            findItem(R.id.cab_dsremo_why_flagged).isVisible = isOneItemSelected
+            findItem(R.id.cab_dsremo_report_chakshu).isVisible = isOneItemSelected
             findItem(R.id.cab_restore).isVisible = isRecycleBin
         }
     }
@@ -150,6 +152,8 @@ class ThreadAdapter(
             R.id.cab_restore -> askConfirmRestore()
             R.id.cab_select_all -> selectAll()
             R.id.cab_properties -> showMessageDetails()
+            R.id.cab_dsremo_why_flagged -> showWhyFlagged()
+            R.id.cab_dsremo_report_chakshu -> reportToChakshu()
         }
     }
 
@@ -270,6 +274,73 @@ class ThreadAdapter(
         MessageDetailsDialog(activity, message)
     }
 
+    private fun showWhyFlagged() {
+        val message = getSelectedItems().firstOrNull() as? Message ?: return
+        val verdict = org.fossify.messages.helpers.FraudVerdictStore.get(activity, message.id)
+        val title = activity.getString(R.string.dsremo_verdict_dialog_title)
+        val body = if (verdict == null) {
+            activity.getString(R.string.dsremo_not_flagged_body)
+        } else {
+            val reasonList = if (verdict.reasons.isEmpty()) {
+                activity.getString(R.string.dsremo_verdict_no_reasons)
+            } else {
+                verdict.reasons.joinToString("\n") { reasonText -> "• $reasonText" }
+            }
+            "Category: ${verdict.category.name}\nScore: ${verdict.score}\n\nReasons:\n$reasonList"
+        }
+        androidx.appcompat.app.AlertDialog.Builder(activity)
+            .setTitle(if (verdict == null) activity.getString(R.string.dsremo_not_flagged_title) else title)
+            .setMessage(body)
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
+        finishActMode()
+    }
+
+    private fun wrapDsremoSafeUrlSpans(textView: android.widget.TextView, messageId: Long) {
+        val charSeq = textView.text ?: return
+        val spannable = if (charSeq is android.text.Spannable) {
+            charSeq
+        } else {
+            android.text.SpannableString(charSeq).also { spannableCopy ->
+                textView.text = spannableCopy
+            }
+        }
+        val urlSpans = spannable.getSpans(0, spannable.length, android.text.style.URLSpan::class.java)
+        if (urlSpans.isEmpty()) return
+        for (oldSpan in urlSpans) {
+            if (oldSpan is org.fossify.messages.helpers.DsremoSafeUrlSpan) continue
+            val start = spannable.getSpanStart(oldSpan)
+            val end = spannable.getSpanEnd(oldSpan)
+            val flags = spannable.getSpanFlags(oldSpan)
+            val url = oldSpan.url ?: continue
+            spannable.removeSpan(oldSpan)
+            spannable.setSpan(
+                org.fossify.messages.helpers.DsremoSafeUrlSpan(url, messageId),
+                start, end, flags
+            )
+        }
+        textView.movementMethod = android.text.method.LinkMovementMethod.getInstance()
+    }
+
+    private fun reportToChakshu() {
+        val message = getSelectedItems().firstOrNull() as? Message ?: return
+        val sender = message.senderPhoneNumber.ifBlank { message.senderName }
+        val clip = "Sender: $sender\nBody: ${message.body}"
+        runCatching {
+            val cm = activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("dsremo-fraud-report", clip))
+            android.widget.Toast.makeText(
+                activity,
+                "Copied sender + body. Opening Chakshu portal.",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+        }
+        val uri = android.net.Uri.parse("https://sancharsaathi.gov.in/sfc/")
+        val intent = Intent(Intent.ACTION_VIEW, uri)
+        runCatching { activity.startActivity(intent) }
+        finishActMode()
+    }
+
     private fun askConfirmDelete() {
         val itemsCnt = selectedKeys.size
 
@@ -368,6 +439,7 @@ class ThreadAdapter(
             threadMessageHolder.isSelected = selectedKeys.contains(message.getSelectionKey())
             threadMessageBody.apply {
                 text = message.body
+                wrapDsremoSafeUrlSpans(this, message.id)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
                 beVisibleIf(message.body.isNotEmpty())
                 setOnLongClickListener {

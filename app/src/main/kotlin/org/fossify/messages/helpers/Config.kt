@@ -148,4 +148,16 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getBoolean(KEEP_CONVERSATIONS_ARCHIVED, false)
         set(keepConversationsArchived) = prefs.edit()
             .putBoolean(KEEP_CONVERSATIONS_ARCHIVED, keepConversationsArchived).apply()
+
+    var dsremoAutoDeleteOtps: Boolean
+        get() = prefs.getBoolean(DSREMO_AUTO_DELETE_OTPS, false)
+        set(value) = prefs.edit().putBoolean(DSREMO_AUTO_DELETE_OTPS, value).apply()
+
+    var dsremoFraudFilterEnabled: Boolean
+        get() = prefs.getBoolean(DSREMO_FRAUD_FILTER_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(DSREMO_FRAUD_FILTER_ENABLED, value).apply()
+
+    var dsremoOutboundOtpGuard: Boolean
+        get() = prefs.getBoolean(DSREMO_OUTBOUND_OTP_GUARD, true)
+        set(value) = prefs.edit().putBoolean(DSREMO_OUTBOUND_OTP_GUARD, value).apply()
 }

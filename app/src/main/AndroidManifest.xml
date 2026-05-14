@@ -31,7 +31,7 @@
 
     <application
         android:name=".App"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:appCategory="productivity"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_launcher_name"
@@ -60,6 +60,20 @@
             android:configChanges="orientation"
             android:exported="true"
             android:label="@string/archived_conversations"
+            android:parentActivityName=".activities.MainActivity" />
+
+        <activity
+            android:name=".activities.DsremoFilteredActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/dsremo_show_filtered"
+            android:parentActivityName=".activities.MainActivity" />
+
+        <activity
+            android:name=".activities.DsremoFilteredActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/dsremo_show_filtered"
             android:parentActivityName=".activities.MainActivity" />
 
         <activity

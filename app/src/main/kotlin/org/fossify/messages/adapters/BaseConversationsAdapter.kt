@@ -155,7 +155,7 @@ abstract class BaseConversationsAdapter(
             conversationFrame.isSelected = selectedKeys.contains(conversation.hashCode())
 
             conversationAddress.apply {
-                text = conversation.title
+                text = buildAddressWithDsremoChip(conversation)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize * 1.2f)
             }
 
@@ -241,6 +241,35 @@ abstract class BaseConversationsAdapter(
         override fun areContentsTheSame(oldItem: Conversation, newItem: Conversation): Boolean {
             return Conversation.areContentsTheSame(oldItem, newItem)
         }
+    }
+
+    private fun buildAddressWithDsremoChip(conversation: Conversation): CharSequence {
+        val rawSender = conversation.phoneNumber.orEmpty()
+        val header = org.fossify.messages.helpers.DltHeader.parse(rawSender)
+        val (chipText, chipColor) = when (header.category) {
+            org.fossify.messages.helpers.DltHeader.Category.PROMOTIONAL -> "P" to android.graphics.Color.parseColor("#888888")
+            org.fossify.messages.helpers.DltHeader.Category.SERVICE -> "S" to android.graphics.Color.parseColor("#4DA6FF")
+            org.fossify.messages.helpers.DltHeader.Category.TRANSACTIONAL -> "T" to android.graphics.Color.parseColor("#33CC66")
+            org.fossify.messages.helpers.DltHeader.Category.GOVERNMENT -> "G" to android.graphics.Color.parseColor("#FFAA33")
+            org.fossify.messages.helpers.DltHeader.Category.UNKNOWN -> "?" to android.graphics.Color.parseColor("#FF4D4D")
+            org.fossify.messages.helpers.DltHeader.Category.NOT_DLT -> return conversation.title
+        }
+        val labeledTitle = conversation.title
+        val suffix = "  [$chipText]"
+        val builder = android.text.SpannableStringBuilder(labeledTitle).append(suffix)
+        val start = labeledTitle.length
+        val end = builder.length
+        builder.setSpan(
+            android.text.style.ForegroundColorSpan(chipColor),
+            start, end,
+            android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        builder.setSpan(
+            android.text.style.RelativeSizeSpan(0.75f),
+            start, end,
+            android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        return builder
     }
 
     companion object {

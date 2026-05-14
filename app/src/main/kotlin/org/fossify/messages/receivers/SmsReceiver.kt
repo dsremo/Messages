@@ -21,7 +21,12 @@ import org.fossify.messages.extensions.insertOrUpdateConversation
 import org.fossify.messages.extensions.messagesDB
 import org.fossify.messages.extensions.shouldUnarchive
 import org.fossify.messages.extensions.showReceivedMessageNotification
+import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.updateConversationArchivedStatus
+import org.fossify.messages.helpers.DSREMO_OTP_DELETE_MINUTES
+import org.fossify.messages.helpers.DsremoOtpDetector
+import org.fossify.messages.helpers.FraudFilter
+import org.fossify.messages.helpers.FraudVerdictStore
 import org.fossify.messages.helpers.ReceiverUtils.isMessageFilteredOut
 import org.fossify.messages.helpers.refreshConversations
 import org.fossify.messages.helpers.refreshMessages
@@ -58,6 +63,12 @@ class SmsReceiver : BroadcastReceiver() {
                 val threadId = appContext.getThreadId(address)
                 val subscriptionId = intent.getIntExtra("subscription", -1)
 
+                val verdict = if (appContext.config.dsremoFraudFilterEnabled) {
+                    FraudFilter.classify(appContext, address, body)
+                } else {
+                    FraudFilter.Verdict(FraudFilter.Category.INBOX, 0, emptyList())
+                }
+
                 handleMessageSync(
                     context = appContext,
                     address = address,
@@ -66,7 +77,8 @@ class SmsReceiver : BroadcastReceiver() {
                     date = date,
                     threadId = threadId,
                     subscriptionId = subscriptionId,
-                    status = status
+                    status = status,
+                    verdict = verdict
                 )
             } finally {
                 pending.finish()
@@ -84,8 +96,11 @@ class SmsReceiver : BroadcastReceiver() {
         threadId: Long,
         type: Int = Telephony.Sms.MESSAGE_TYPE_INBOX,
         subscriptionId: Int,
-        status: Int
+        status: Int,
+        verdict: FraudFilter.Verdict = FraudFilter.Verdict(FraudFilter.Category.INBOX, 0, emptyList())
     ) {
+        val effectiveRead = if (verdict.category == FraudFilter.Category.SPAM) 1 else read
+        val suppressNotification = verdict.category != FraudFilter.Category.INBOX
         val photoUri = SimpleContactsHelper(context).getPhotoUriFromPhoneNumber(address)
         val bitmap = context.getNotificationBitmap(photoUri)
 
@@ -94,11 +109,19 @@ class SmsReceiver : BroadcastReceiver() {
             subject = subject,
             body = body,
             date = date,
-            read = read,
+            read = effectiveRead,
             threadId = threadId,
             type = type,
             subscriptionId = subscriptionId
         )
+
+        if (context.config.dsremoAutoDeleteOtps && DsremoOtpDetector.looksLikeOtp(body)) {
+            DsremoOtpDetector.scheduleDeletion(
+                context, threadId, newMessageId, DSREMO_OTP_DELETE_MINUTES
+            )
+        }
+
+        FraudVerdictStore.save(context, newMessageId, verdict)
 
         context.getConversations(threadId).firstOrNull()?.let { conv ->
             runCatching { context.insertOrUpdateConversation(conv) }
@@ -137,19 +160,24 @@ class SmsReceiver : BroadcastReceiver() {
 
         context.messagesDB.insertOrUpdate(message)
 
-        if (context.shouldUnarchive()) {
+        if (verdict.category == FraudFilter.Category.SPAM) {
+            context.updateConversationArchivedStatus(threadId, true)
+        } else if (context.shouldUnarchive()) {
             context.updateConversationArchivedStatus(threadId, false)
         }
 
         refreshMessages()
         refreshConversations()
-        context.showReceivedMessageNotification(
-            messageId = newMessageId,
-            address = address,
-            senderName = senderName,
-            body = body,
-            threadId = threadId,
-            bitmap = bitmap
-        )
+
+        if (!suppressNotification) {
+            context.showReceivedMessageNotification(
+                messageId = newMessageId,
+                address = address,
+                senderName = senderName,
+                body = body,
+                threadId = threadId,
+                bitmap = bitmap
+            )
+        }
     }
 }

@@ -115,6 +115,9 @@ class SettingsActivity : SimpleActivity() {
         setupSendLongMessageAsMMS()
         setupGroupMessageAsMMS()
         setupKeepConversationsArchived()
+        setupDsremoAutoDeleteOtps()
+        setupDsremoFraudFilter()
+        setupDsremoOutboundOtpGuard()
         setupLockScreenVisibility()
         setupMMSFileSizeLimit()
         setupUseRecycleBin()
@@ -311,6 +314,30 @@ class SettingsActivity : SimpleActivity() {
         settingsKeepConversationsArchivedHolder.setOnClickListener {
             settingsKeepConversationsArchived.toggle()
             config.keepConversationsArchived = settingsKeepConversationsArchived.isChecked
+        }
+    }
+
+    private fun setupDsremoAutoDeleteOtps() = binding.apply {
+        settingsDsremoAutoDeleteOtps.isChecked = config.dsremoAutoDeleteOtps
+        settingsDsremoAutoDeleteOtpsHolder.setOnClickListener {
+            settingsDsremoAutoDeleteOtps.toggle()
+            config.dsremoAutoDeleteOtps = settingsDsremoAutoDeleteOtps.isChecked
+        }
+    }
+
+    private fun setupDsremoFraudFilter() = binding.apply {
+        settingsDsremoFraudFilter.isChecked = config.dsremoFraudFilterEnabled
+        settingsDsremoFraudFilterHolder.setOnClickListener {
+            settingsDsremoFraudFilter.toggle()
+            config.dsremoFraudFilterEnabled = settingsDsremoFraudFilter.isChecked
+        }
+    }
+
+    private fun setupDsremoOutboundOtpGuard() = binding.apply {
+        settingsDsremoOutboundOtpGuard.isChecked = config.dsremoOutboundOtpGuard
+        settingsDsremoOutboundOtpGuardHolder.setOnClickListener {
+            settingsDsremoOutboundOtpGuard.toggle()
+            config.dsremoOutboundOtpGuard = settingsDsremoOutboundOtpGuard.isChecked
         }
     }
 

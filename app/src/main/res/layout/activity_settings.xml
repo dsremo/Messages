@@ -380,6 +380,51 @@
 
             </RelativeLayout>
 
+            <RelativeLayout
+                android:id="@+id/settings_dsremo_auto_delete_otps_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_dsremo_auto_delete_otps"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dsremo_auto_delete_otps" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_dsremo_fraud_filter_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_dsremo_fraud_filter"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dsremo_fraud_filter" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_dsremo_outbound_otp_guard_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_dsremo_outbound_otp_guard"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dsremo_outbound_otp_guard" />
+
+            </RelativeLayout>
+
             <include
                 android:id="@+id/settings_archive_divider"
                 layout="@layout/divider" />

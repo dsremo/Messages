@@ -1529,8 +1529,23 @@ class ThreadActivity : SimpleActivity() {
             showErrorToast(getString(org.fossify.commons.R.string.unknown_error_occurred))
             return
         }
-        scrollToBottom()
 
+        if (config.dsremoOutboundOtpGuard &&
+            org.fossify.messages.helpers.OutboundOtpGuard.shouldGuard(text, messages)
+        ) {
+            promptDsremoOutboundOtpGuard {
+                proceedSendMessage()
+            }
+            return
+        }
+
+        proceedSendMessage()
+    }
+
+    private fun proceedSendMessage() {
+        var text = binding.messageHolder.threadTypeMessage.value
+        if (text.isEmpty() && getAttachmentSelections().isEmpty()) return
+        scrollToBottom()
         text = removeDiacriticsIfNeeded(text)
 
         val subscriptionId = availableSIMCards.getOrNull(currentSIMCardIndex)?.subscriptionId
@@ -1541,6 +1556,34 @@ class ThreadActivity : SimpleActivity() {
         } else {
             sendNormalMessage(text, subscriptionId)
         }
+    }
+
+    private fun promptDsremoOutboundOtpGuard(onConfirmed: () -> Unit) {
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(getString(R.string.dsremo_outbound_otp_title))
+            .setMessage(getString(R.string.dsremo_outbound_otp_body))
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(getString(R.string.dsremo_outbound_otp_send_anyway), null)
+            .create()
+        dialog.setOnShowListener {
+            val positive = dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)
+            positive.isEnabled = false
+            val originalText = positive.text?.toString() ?: ""
+            object : android.os.CountDownTimer(5_000L, 1_000L) {
+                override fun onTick(remainMs: Long) {
+                    positive.text = "$originalText (${(remainMs / 1000L) + 1})"
+                }
+                override fun onFinish() {
+                    positive.isEnabled = true
+                    positive.text = originalText
+                }
+            }.start()
+            positive.setOnClickListener {
+                dialog.dismiss()
+                onConfirmed()
+            }
+        }
+        dialog.show()
     }
 
     private fun sendScheduledMessage(text: String, subscriptionId: Int) {
