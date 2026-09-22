@@ -105,11 +105,45 @@ object FraudFilter {
             ".{0,40}?\\b(?:₹|Rs\\.?|INR)\\s?\\d{3,5}\\b"
     )
     private val P_OTP_SHARE_FRAUD = Pattern.compile(
-        "(?i)\\b(share|provide|tell|send)\\b.{0,20}\\bOTP\\b"
+        "(?i)\\b(share|provide|tell|send|give|disclose|reveal|forward)\\b.{0,20}\\bOTP\\b.{0,40}?\\b(to|with|at|call|whatsapp|wa)\\b"
+    )
+    private val P_OTP_SHARE_FRAUD_RECIPIENT = Pattern.compile(
+        "(?i)\\b(share|provide|tell|send|give|disclose|reveal|forward)\\b.{0,20}\\bOTP\\b.{0,80}?(https?://|www\\.|\\+?\\d{10,15}|[a-z0-9._-]+@[a-z]+)"
+    )
+    private val P_OTP_SHARE_NEGATION = Pattern.compile(
+        "(?i)\\b(do\\s*not|don'?t|never|do\\s*n't|please\\s*don'?t|no\\s+need\\s+to)\\b.{0,30}\\b(share|provide|tell|send|give|disclose|reveal)\\b.{0,40}\\bOTP\\b"
     )
     private val P_CBI_ARREST = Pattern.compile(
         "(?i)\\b(CBI|police|arrest|narcotics|FIR|warrant|FedEx)\\b" +
             ".{0,30}?\\b(case|FIR|warrant|registered|investigation)\\b"
+    )
+    private val P_UPI_AUTOPAY_SCAM = Pattern.compile(
+        "(?i)\\b(autopay|auto[- ]?debit|mandate|recurring)\\b.{0,40}?\\b(approve|authorise|authorize|UPI[- ]?ID|VPA|click|confirm)\\b"
+    )
+    private val P_LOAN_APPROVED = Pattern.compile(
+        "(?i)\\b(loan|personal[- ]?loan|instant[- ]?loan|pre[- ]?approved)\\b.{0,40}?\\b(approved|sanction|disbursed|claim|process)\\b"
+    )
+    private val P_CRYPTO_FOREX = Pattern.compile(
+        "(?i)\\b(crypto|bitcoin|BTC|ETH|forex|MT4|MT5|trading|profit|guaranteed[- ]?return|2x|3x|10x|10%[- ]?daily)\\b" +
+            ".{0,40}?\\b(invest|deposit|signup|sign[- ]?up|join|click|earn)\\b"
+    )
+    private val P_WHATSAPP_HI_SCAM = Pattern.compile(
+        "(?i)\\b(send|reply|message|whatsapp|wa)\\b\\s+(\"?hi\"?|hello|join)\\b.{0,30}?\\b(\\+?\\d{10,15})\\b"
+    )
+    private val P_FAKE_SHOPPING = Pattern.compile(
+        "(?i)\\b(amazn|flipkrt|amaz0n|flipkar+t|am4zon|fl1pkart|myntr4|myntr@|shopcl[u0]es)\\b"
+    )
+    private val P_NEFT_KYC_SCAM = Pattern.compile(
+        "(?i)\\b(NEFT|RTGS|IMPS|UPI|netbanking)\\b.{0,30}?\\b(update|expire|reactivate|verify|suspend|block|frozen)\\b"
+    )
+    private val P_FAKE_GOVT_SUBSIDY = Pattern.compile(
+        "(?i)\\b(PM[-\\s]?Kisan|PMAY|Ujjwala|subsidy|scholarship|free[-\\s]?(LPG|gas|laptop|recharge))\\b.{0,40}?\\b(register|apply|click|claim|fill)\\b"
+    )
+    private val P_OLA_OLX_FRAUD = Pattern.compile(
+        "(?i)\\b(OLX|Quikr|FB[-\\s]?marketplace|carousel)\\b.{0,40}?\\b(QR|scan|UPI|PIN|advance|token)\\b"
+    )
+    private val P_FAKE_ELECTION_SCAM = Pattern.compile(
+        "(?i)\\b(voter[-\\s]?(id|list)|EPIC|election[-\\s]?card|booth)\\b.{0,40}?\\b(update|delete|removed|verify|fine|penalty)\\b"
     )
 
     fun classify(
@@ -122,28 +156,48 @@ object FraudFilter {
         var score = 0
         val header = DltHeader.parse(senderAddress)
 
-        if (P_OTP_CONTEXT.matcher(body).find() ||
-            P_DO_NOT_SHARE.matcher(body).find() ||
-            P_AADHAAR_OTP.matcher(body).find()
-        ) {
-            return Verdict(Category.INBOX, -100, listOf("OTP / verification content"))
-        }
-        if (P_TXN_ALERT.matcher(body).find()) {
-            return Verdict(Category.INBOX, -80, listOf("Transactional alert (credit/debit)"))
-        }
-        if (header.isTransactional && BankPeWhitelist.isKnownBankPe(header.peName)) {
-            return Verdict(Category.INBOX, -90, listOf("Bank PE + -T suffix"))
-        }
-        if (header.isGovernment || BankPeWhitelist.isKnownGovernmentHeader(header.peName)) {
-            return Verdict(Category.INBOX, -90, listOf("Government sender"))
-        }
-        if (P_IRCTC_TRAIN.matcher(body).find()) {
-            return Verdict(Category.INBOX, -60, listOf("Train / IRCTC info"))
-        }
-        if (P_DELIVERY_TRACKING.matcher(body).find() &&
-            !P_PARCEL_SCAM.matcher(body).find()
-        ) {
-            return Verdict(Category.INBOX, -40, listOf("Delivery tracking"))
+        val hasFraudMarkers =
+            (P_OTP_SHARE_FRAUD_RECIPIENT.matcher(body).find() && !P_OTP_SHARE_NEGATION.matcher(body).find()) ||
+            P_SHORTENER.matcher(body).find() ||
+            P_SUSPICIOUS_TLD.matcher(body).find() ||
+            P_APK_EXT.matcher(body).find() ||
+            P_REFUND_KEYWORDS.matcher(body).find() ||
+            P_CBI_ARREST.matcher(body).find() ||
+            P_UPI_AUTOPAY_SCAM.matcher(body).find() ||
+            P_FAKE_SHOPPING.matcher(body).find() ||
+            P_ELECTRICITY_SCAM.matcher(body).find() ||
+            P_TASK_JOB_SCAM.matcher(body).find() ||
+            P_NEFT_KYC_SCAM.matcher(body).find() ||
+            P_CRYPTO_FOREX.matcher(body).find() ||
+            P_WHATSAPP_HI_SCAM.matcher(body).find() ||
+            P_OLA_OLX_FRAUD.matcher(body).find() ||
+            P_FAKE_ELECTION_SCAM.matcher(body).find() ||
+            (P_PARCEL_SCAM.matcher(body).find() && P_ANY_URL.matcher(body).find())
+
+        if (!hasFraudMarkers) {
+            if (P_OTP_CONTEXT.matcher(body).find() ||
+                P_DO_NOT_SHARE.matcher(body).find() ||
+                P_AADHAAR_OTP.matcher(body).find()
+            ) {
+                return Verdict(Category.INBOX, -100, listOf("OTP / verification content"))
+            }
+            if (P_TXN_ALERT.matcher(body).find()) {
+                return Verdict(Category.INBOX, -80, listOf("Transactional alert (credit/debit)"))
+            }
+            if (header.isTransactional && BankPeWhitelist.isKnownBankPe(header.peName)) {
+                return Verdict(Category.INBOX, -90, listOf("Bank PE + -T suffix"))
+            }
+            if (header.isGovernment && BankPeWhitelist.isKnownGovernmentHeader(header.peName)) {
+                return Verdict(Category.INBOX, -90, listOf("Government sender"))
+            }
+            if (P_IRCTC_TRAIN.matcher(body).find()) {
+                return Verdict(Category.INBOX, -60, listOf("Train / IRCTC info"))
+            }
+            if (P_DELIVERY_TRACKING.matcher(body).find() &&
+                !P_PARCEL_SCAM.matcher(body).find()
+            ) {
+                return Verdict(Category.INBOX, -40, listOf("Delivery tracking"))
+            }
         }
 
         when (header.category) {
@@ -199,13 +253,49 @@ object FraudFilter {
             score += 60
             reasons.add("Earn-daily / task scam pattern")
         }
-        if (P_OTP_SHARE_FRAUD.matcher(body).find()) {
+        if (P_OTP_SHARE_FRAUD_RECIPIENT.matcher(body).find() && !P_OTP_SHARE_NEGATION.matcher(body).find()) {
             score += 80
-            reasons.add("'Share OTP' fraud pattern")
+            reasons.add("'Share OTP with X' fraud pattern (recipient present)")
         }
         if (P_CBI_ARREST.matcher(body).find()) {
             score += 80
             reasons.add("Digital-arrest / CBI threat pattern")
+        }
+        if (P_UPI_AUTOPAY_SCAM.matcher(body).find()) {
+            score += 70
+            reasons.add("UPI autopay/mandate approval scam")
+        }
+        if (P_LOAN_APPROVED.matcher(body).find() && P_ANY_URL.matcher(body).find()) {
+            score += 50
+            reasons.add("Instant-loan approved + URL (predatory lending)")
+        }
+        if (P_CRYPTO_FOREX.matcher(body).find()) {
+            score += 75
+            reasons.add("Crypto/forex investment fraud pattern")
+        }
+        if (P_WHATSAPP_HI_SCAM.matcher(body).find()) {
+            score += 65
+            reasons.add("'Send Hi to WhatsApp number' redirect scam")
+        }
+        if (P_FAKE_SHOPPING.matcher(body).find()) {
+            score += 85
+            reasons.add("Misspelled brand impersonation (Amazn/Flipkrt/Myntr4 etc.)")
+        }
+        if (P_NEFT_KYC_SCAM.matcher(body).find() && !P_TXN_ALERT.matcher(body).find()) {
+            score += 70
+            reasons.add("NEFT/UPI 'verify-or-suspend' scam pattern")
+        }
+        if (P_FAKE_GOVT_SUBSIDY.matcher(body).find() && !header.isGovernment) {
+            score += 70
+            reasons.add("Fake government subsidy/PMAY/Ujjwala scam")
+        }
+        if (P_OLA_OLX_FRAUD.matcher(body).find()) {
+            score += 60
+            reasons.add("OLX/marketplace UPI-QR-scan advance-payment scam")
+        }
+        if (P_FAKE_ELECTION_SCAM.matcher(body).find() && !header.isGovernment) {
+            score += 60
+            reasons.add("Fake voter-id/election-card scam")
         }
 
         var marketingHits = 0

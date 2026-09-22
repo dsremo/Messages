@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
+import android.util.Log
 import org.fossify.commons.extensions.baseConfig
 import org.fossify.commons.extensions.getMyContactsCursor
 import org.fossify.commons.extensions.isNumberBlocked
@@ -24,7 +25,9 @@ import org.fossify.messages.extensions.showReceivedMessageNotification
 import org.fossify.messages.extensions.config
 import org.fossify.messages.extensions.updateConversationArchivedStatus
 import org.fossify.messages.helpers.DSREMO_OTP_DELETE_MINUTES
+import org.fossify.messages.helpers.DsremoMissedCallSmsDetector
 import org.fossify.messages.helpers.DsremoOtpDetector
+import org.fossify.messages.helpers.DsremoSimilarBlocker
 import org.fossify.messages.helpers.FraudFilter
 import org.fossify.messages.helpers.FraudVerdictStore
 import org.fossify.messages.helpers.ReceiverUtils.isMessageFilteredOut
@@ -50,23 +53,55 @@ class SmsReceiver : BroadcastReceiver() {
                 val status = parts.last().status
                 val body = buildString { parts.forEach { append(it.messageBody.orEmpty()) } }
 
-                if (isMessageFilteredOut(appContext, body)) return@ensureBackgroundThread
-                if (appContext.isNumberBlocked(address)) return@ensureBackgroundThread
-                if (appContext.baseConfig.blockUnknownNumbers) {
+                val looksLikeOtp = DsremoOtpDetector.looksLikeOtp(body)
+                val addressLog = if (address.length > 12) address.take(4) + "..." + address.takeLast(4) else address
+                val bodyLog = body.take(40).replace('\n', ' ')
+                Log.w("DsremoSms", "in from=$addressLog otp=$looksLikeOtp body=\"$bodyLog\"")
+
+                if (isMessageFilteredOut(appContext, body)) {
+                    Log.w("DsremoSms", "  DROPPED by isMessageFilteredOut (user blocked-keyword hit) from=$addressLog otp=$looksLikeOtp")
+                    return@ensureBackgroundThread
+                }
+                if (appContext.isNumberBlocked(address)) {
+                    Log.w("DsremoSms", "  DROPPED by isNumberBlocked from=$addressLog")
+                    return@ensureBackgroundThread
+                }
+                if (!looksLikeOtp && appContext.config.dsremoAutoDeleteMissedCallSms &&
+                    DsremoMissedCallSmsDetector.isMissedCallSms(address, body)) {
+                    Log.w("DsremoSms", "  DROPPED by MissedCallSmsDetector from=$addressLog")
+                    return@ensureBackgroundThread
+                }
+                if (!looksLikeOtp && appContext.baseConfig.blockUnknownNumbers) {
                     val privateCursor =
                         appContext.getMyContactsCursor(favoritesOnly = false, withPhoneNumbersOnly = true)
                     val result = SimpleContactsHelper(appContext).existsSync(address, privateCursor)
-                    if (result == ContactLookupResult.NotFound) return@ensureBackgroundThread
+                    if (result == ContactLookupResult.NotFound) {
+                        Log.w("DsremoSms", "  DROPPED by blockUnknownNumbers from=$addressLog")
+                        return@ensureBackgroundThread
+                    }
                 }
 
                 val date = System.currentTimeMillis()
                 val threadId = appContext.getThreadId(address)
                 val subscriptionId = intent.getIntExtra("subscription", -1)
 
-                val verdict = if (appContext.config.dsremoFraudFilterEnabled) {
+                val baseVerdict = if (!looksLikeOtp && appContext.config.dsremoFraudFilterEnabled) {
                     FraudFilter.classify(appContext, address, body)
                 } else {
-                    FraudFilter.Verdict(FraudFilter.Category.INBOX, 0, emptyList())
+                    FraudFilter.Verdict(FraudFilter.Category.INBOX, 0, if (looksLikeOtp) listOf("OTP whitelist bypass") else emptyList())
+                }
+                Log.w("DsremoSms", "  verdict=${baseVerdict.category} score=${baseVerdict.score} reasons=${baseVerdict.reasons}")
+
+                val verdict = if (
+                    !looksLikeOtp &&
+                    appContext.config.dsremoAutoBlockSimilar &&
+                    baseVerdict.category != FraudFilter.Category.SPAM &&
+                    DsremoSimilarBlocker.isSimilarToBlocked(appContext, body)
+                ) {
+                    FraudFilter.Verdict(FraudFilter.Category.SPAM, baseVerdict.score, baseVerdict.reasons + "similar_to_blocked")
+                } else baseVerdict
+                if (verdict.category == FraudFilter.Category.SPAM) {
+                    DsremoSimilarBlocker.addSignature(appContext, body)
                 }
 
                 handleMessageSync(
