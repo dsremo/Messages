@@ -17,12 +17,13 @@ object FraudFilter {
         val reasons: List<String>,
     )
 
-    private const val SPAM_THRESHOLD = 70
-    private const val PROMO_THRESHOLD = 30
+    private const val SPAM_THRESHOLD = 90
+    private const val PROMO_THRESHOLD = 40
     private const val CONTACT_SCORE_CAP = 20
 
     private val P_OTP_CONTEXT = Pattern.compile(
-        "(?i)\\b(OTP|One[\\s-]?Time[\\s-]?Password|verification[\\s-]?code|ओटीपी)\\b.*?\\b\\d{4,8}\\b"
+        "(?is)(\\b(OTP|One[\\s-]?Time[\\s-]?Password|verification[\\s-]?code|ओटीपी)\\b.{0,60}\\b\\d{4,8}\\b|" +
+            "\\b\\d{4,8}\\b.{0,60}\\b(OTP|One[\\s-]?Time[\\s-]?Password|verification[\\s-]?code|ओटीपी)\\b)"
     )
     private val P_DO_NOT_SHARE = Pattern.compile(
         "(?i)\\bdo\\s+not\\s+share\\b.*?\\b(OTP|PIN|CVV|password|पासवर्ड)\\b"
@@ -323,9 +324,9 @@ object FraudFilter {
         }
 
         val urgencyMatcher = P_URGENCY.matcher(body)
-        if (urgencyMatcher.find() && P_ANY_URL.matcher(body).find()) {
+        if (urgencyMatcher.find() && P_ANY_URL.matcher(body).find() && P_SUSPICIOUS_TLD.matcher(body).find()) {
             score += 20
-            reasons.add("Urgency language + URL (scam-funnel pattern)")
+            reasons.add("Urgency language + URL on suspicious TLD (scam-funnel pattern)")
         }
 
         val words = body.trim().split("\\s+".toRegex()).filter { it.isNotBlank() }
