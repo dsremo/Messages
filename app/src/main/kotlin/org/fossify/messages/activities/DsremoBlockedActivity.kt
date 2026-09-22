@@ -14,7 +14,10 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import org.fossify.commons.extensions.getProperBackgroundColor
+import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.messages.R
@@ -86,6 +89,11 @@ class DsremoBlockedActivity : SimpleActivity() {
             )
         }
         setContentView(rootLayout)
+        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, windowInsets ->
+            val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            windowInsets
+        }
 
         title = getString(R.string.dsremo_blocked_title)
         loadAndRender()
@@ -105,11 +113,6 @@ class DsremoBlockedActivity : SimpleActivity() {
                         setPadding(0, 96, 0, 0)
                     }
                     container.addView(emptyView)
-                    Toast.makeText(
-                        this,
-                        getString(R.string.dsremo_blocked_empty),
-                        Toast.LENGTH_SHORT,
-                    ).show()
                     return@runOnUiThread
                 }
                 for (row in rows) {
@@ -160,11 +163,12 @@ class DsremoBlockedActivity : SimpleActivity() {
         val rowContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(24, 16, 24, 16)
-            setBackgroundColor(Color.parseColor("#3D1F1F"))
+            val tint = getProperPrimaryColor() and 0x00FFFFFF or 0x22000000
+            setBackgroundColor(tint)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { topMargin = 8; bottomMargin = 8 }
+            ).apply { topMargin = 12; bottomMargin = 12 }
         }
         val senderLine = TextView(this).apply {
             text = "${row.address} — ${row.entry.host}"
@@ -200,7 +204,11 @@ class DsremoBlockedActivity : SimpleActivity() {
             text = getString(R.string.dsremo_blocked_ignore)
             setOnClickListener { ignoreRow(row, rowContainer) }
         }
-        buttonRow.addView(openButton)
+        val buttonParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+        ).apply { marginEnd = 16 }
+        buttonRow.addView(openButton, buttonParams)
         buttonRow.addView(ignoreButton)
 
         rowContainer.addView(senderLine)

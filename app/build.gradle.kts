@@ -108,6 +108,7 @@ android {
     androidResources {
         @Suppress("UnstableApiUsage")
         generateLocaleConfig = true
+        noCompress += "bin"
     }
 
     tasks.withType<KotlinCompile> {
