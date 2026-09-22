@@ -42,9 +42,14 @@ object FraudFilter {
     )
 
     private val P_MARKETING_WORDS = Pattern.compile(
-        "(?i)\\b(SALE|OFFER|FLAT|UPTO|UP\\s?TO|MEGA|MAHA|LOOT|FREE|WIN|WON|PRIZE|" +
-            "CASHBACK|DISCOUNT|HURRY|LIMITED|EXCLUSIVE|GRAB|DEAL|BIGGEST|BUMPER|BLOCKBUSTER|" +
-            "NEW\\s+LAUNCH|JUST\\s+LANDED|FLASH|GIVEAWAY)\\b"
+        "(?i)\\b(MEGA\\s+SALE|MAHA\\s+SALE|BLOCKBUSTER\\s+SALE|FLASH\\s+SALE|" +
+            "BIGGEST\\s+(SALE|DEAL|OFFER|DISCOUNT)|BUMPER\\s+(OFFER|SALE|DEAL)|" +
+            "LOOT|GRAB\\s+NOW|" +
+            "FLAT\\s+\\d+%|UPTO\\s+\\d+%|UP\\s?TO\\s+\\d+%|" +
+            "NEW\\s+LAUNCH|JUST\\s+LANDED|" +
+            "WIN\\s+(PRIZES?|CASH|GIFT)|WON\\s+(PRIZES?|CASH|GIFT)|" +
+            "FREE\\s+(GIFT|COUPON|VOUCHER)|GIVEAWAY|" +
+            "CASHBACK\\s+OF|EXCLUSIVE\\s+(OFFER|DEAL))\\b"
     )
     private val P_RS_AMOUNT_OFFER = Pattern.compile(
         "(?i)(?:Rs\\.?|₹|INR)\\s?\\d{1,2}(?:[,]?\\d{3})*\\b.*?\\b(off|cashback|bonus|reward|coupon)\\b"
@@ -330,10 +335,15 @@ object FraudFilter {
         }
 
         val words = body.trim().split("\\s+".toRegex()).filter { it.isNotBlank() }
-        if (words.size >= 6) {
-            val capsRatio = words.count { wordTok ->
-                wordTok.length > 2 && wordTok == wordTok.uppercase() && wordTok.any { it.isLetter() }
-            }.toDouble() / words.size
+        val asciiLetterWords = words.filter { wordTok ->
+            wordTok.length > 2 && wordTok.any { ch -> ch in 'A'..'Z' || ch in 'a'..'z' }
+        }
+        if (asciiLetterWords.size >= 6) {
+            val capsCount = asciiLetterWords.count { wordTok ->
+                val asciiChars = wordTok.filter { ch -> ch in 'A'..'Z' || ch in 'a'..'z' }
+                asciiChars.length >= 2 && asciiChars == asciiChars.uppercase()
+            }
+            val capsRatio = capsCount.toDouble() / asciiLetterWords.size
             if (capsRatio > 0.4) {
                 score += 20
                 reasons.add("All-caps density (${(capsRatio * 100).toInt()}%)")
