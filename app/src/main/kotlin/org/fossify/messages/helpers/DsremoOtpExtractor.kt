@@ -7,9 +7,8 @@ import java.util.regex.Pattern
  * a one-tap "copy OTP" action without the user having to manually highlight.
  *
  * Heuristic:
- *   1. Reject if the message is classified as SPAM/PROMOTIONS by FraudFilter.
- *   2. Look for a 4-8 digit run that's adjacent to one of the OTP context words.
- *   3. If multiple candidates, prefer the shortest one nearest to the OTP keyword.
+ *   1. Look for a 4-8 digit run that's adjacent to one of the OTP context words.
+ *   2. If multiple candidates, prefer the shortest one nearest to the OTP keyword.
  */
 object DsremoOtpExtractor {
 

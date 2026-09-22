@@ -33,8 +33,6 @@ class App : FossifyApp() {
         ensureBackgroundThread {
             rescheduleAllScheduledMessages()
         }
-
-        org.fossify.messages.helpers.DsremoCskRuleRefresher.scheduleOpportunistic(this)
     }
 
     private val contactsObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {

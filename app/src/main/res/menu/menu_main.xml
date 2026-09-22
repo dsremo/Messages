@@ -14,11 +14,6 @@
         android:title="@string/show_archived_conversations"
         app:showAsAction="never" />
     <item
-        android:id="@+id/show_dsremo_filtered"
-        android:showAsAction="never"
-        android:title="@string/dsremo_show_filtered"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/settings"
         android:icon="@drawable/ic_settings_cog_vector"
         android:showAsAction="never"

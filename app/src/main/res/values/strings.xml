@@ -140,14 +140,8 @@
     <string name="faq_4_title">Why do my group message replies appear as individual texts to recipients?</string>
     <string name="faq_4_text">You need to enable \"Send group messages as MMS\" in the app settings. This will ensure that group messages are sent as proper MMS, allowing all participants to see each other\'s replies.</string>
     <string name="dsremo_auto_delete_otps">Auto-delete OTP/verification messages after 15 min</string>
-    <string name="dsremo_fraud_filter">Filter India SMS fraud + promotional ads (KYC scams, UPI refund, parcel, electricity, APK traps, -P promotional)</string>
-    <string name="dsremo_why_flagged">Why was this flagged?</string>
     <string name="dsremo_report_chakshu_clipboard">Message copied; opens sancharsaathi.gov.in/sfc</string>
     <string name="dsremo_report_chakshu">Report fraud (Chakshu)</string>
-    <string name="dsremo_not_flagged_title">This message was not flagged</string>
-    <string name="dsremo_not_flagged_body">No fraud rule fired for this message. It was delivered to the normal inbox.</string>
-    <string name="dsremo_verdict_dialog_title">Fraud filter verdict</string>
-    <string name="dsremo_verdict_no_reasons">(no reasons recorded)</string>
     <string name="dsremo_outbound_otp_title">You\'re about to share an OTP</string>
     <string name="dsremo_outbound_otp_body">It looks like you\'re sending a one-time password to someone who just sent you an OTP message.\n\nThis is the most common scam pattern in India: fraudsters call or text claiming to be from a bank, CBI, FedEx, or a delivery service, and trick people into sharing the OTP they just received.\n\nNobody legitimate will ever ask you to share an OTP, PIN, or CVV.\n\nIf you\'re sure this is safe (e.g., you\'re manually relaying to another device of your own), tap Send Anyway after the 5-second hold.</string>
     <string name="dsremo_outbound_otp_send_anyway">Send anyway</string>
@@ -161,27 +155,13 @@
     <string name="dsremo_outbound_link_title">Are you sure about this link?</string>
     <string name="dsremo_outbound_link_body">The message you\'re about to send contains a link that looks risky:</string>
     <string name="dsremo_outbound_link_send_anyway">Send anyway</string>
-    <string name="dsremo_rules_title">Fraud filter rules</string>
-    <string name="dsremo_rules_intro">Toggle individual rules without rebuilding the app. Each rule contributes to the overall fraud score; turning one off removes its points from the classifier.</string>
-    <string name="dsremo_rules_open">Edit fraud filter rules…</string>
     <string name="dsremo_safe_url_title">Open this link?</string>
     <string name="dsremo_safe_url_about_to_open">You are about to open:</string>
-    <string name="dsremo_safe_url_flagged_message">This message was flagged by the fraud filter — be cautious before tapping links inside it.</string>
     <string name="dsremo_safe_url_warnings">Warnings:</string>
     <string name="dsremo_safe_url_open">Open</string>
     <string name="dsremo_safe_url_copy">Copy URL</string>
     <string name="dsremo_safe_url_copied">URL copied to clipboard</string>
     <string name="dsremo_safe_url_refused">Refused: executable file URL (.apk/.exe/...)</string>
-    <string name="dsremo_show_filtered">Filtered messages</string>
-    <string name="dsremo_filtered_loading">Loading…</string>
-    <string name="dsremo_filtered_empty">No flagged messages yet.</string>
-    <string name="dsremo_filtered_section_spam">SPAM (%1$d)</string>
-    <string name="dsremo_filtered_section_promo">PROMOTIONS (%1$d)</string>
-    <string name="dsremo_filtered_section_inbox">In Inbox but scored (%1$d)</string>
-    <string name="dsremo_filtered_sender_line">%1$s — score %2$d</string>
-    <string name="dsremo_filtered_open_thread">Open thread</string>
-    <string name="dsremo_filtered_not_fraud">Not fraud</string>
-    <string name="dsremo_filtered_marked_not_fraud">Verdict cleared</string>
     <string name="dsremo_dlt_legend">Tag legend: [P] promotional, [S] service, [T] transactional, [G] government, [?] unknown</string>
     <string name="dsremo_copy_otp_chip">Copy %1$s</string>
     <string name="dsremo_sim_slot_hint">SIM slot used for this message</string>
@@ -195,7 +175,4 @@
         Haven't found some strings? There's more at
         https://github.com/FossifyOrg/Commons/tree/master/commons/src/main/res
     -->
-    <string name="dsremo_reclassify_all">Re-classify all messages</string>
-    <string name="dsremo_reclassify_started">Re-classifying messages…</string>
-    <string name="dsremo_reclassify_done_format">Re-classified %1$d messages (%2$d changed)</string>
 </resources>

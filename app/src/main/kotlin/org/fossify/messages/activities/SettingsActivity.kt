@@ -125,12 +125,10 @@ class SettingsActivity : SimpleActivity() {
         setupGroupMessageAsMMS()
         setupKeepConversationsArchived()
         setupDsremoAutoDeleteOtps()
-        setupDsremoFraudFilter()
         setupDsremoOutboundOtpGuard()
         setupDsremoSchedRateLimit()
         setupDsremoAutoBlockSimilar()
         setupDsremoAutoDeleteMissedCallSms()
-        setupDsremoRulesEntry()
         setupLockScreenVisibility()
         setupMMSFileSizeLimit()
         setupUseRecycleBin()
@@ -336,14 +334,6 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
-    private fun setupDsremoFraudFilter() = binding.apply {
-        settingsDsremoFraudFilter.isChecked = config.dsremoFraudFilterEnabled
-        settingsDsremoFraudFilterHolder.setOnClickListener {
-            settingsDsremoFraudFilter.toggle()
-            config.dsremoFraudFilterEnabled = settingsDsremoFraudFilter.isChecked
-        }
-    }
-
     private fun setupDsremoOutboundOtpGuard() = binding.apply {
         settingsDsremoOutboundOtpGuard.isChecked = config.dsremoOutboundOtpGuard
         settingsDsremoOutboundOtpGuardHolder.setOnClickListener {
@@ -385,12 +375,6 @@ class SettingsActivity : SimpleActivity() {
         settingsDsremoAutoDeleteMissedCallSmsHolder.setOnClickListener {
             settingsDsremoAutoDeleteMissedCallSms.toggle()
             config.dsremoAutoDeleteMissedCallSms = settingsDsremoAutoDeleteMissedCallSms.isChecked
-        }
-    }
-
-    private fun setupDsremoRulesEntry() = binding.apply {
-        settingsDsremoRulesHolder.setOnClickListener {
-            startActivity(android.content.Intent(this@SettingsActivity, DsremoRulesActivity::class.java))
         }
     }
 

@@ -136,7 +136,6 @@ class ThreadAdapter(
             findItem(R.id.cab_forward_message).isVisible = isOneItemSelected
             findItem(R.id.cab_select_text).isVisible = isOneItemSelected && hasText
             findItem(R.id.cab_properties).isVisible = isOneItemSelected
-            findItem(R.id.cab_dsremo_why_flagged).isVisible = isOneItemSelected
             findItem(R.id.cab_dsremo_report_chakshu).isVisible = isOneItemSelected
             findItem(R.id.cab_restore).isVisible = isRecycleBin
         }
@@ -157,7 +156,6 @@ class ThreadAdapter(
             R.id.cab_restore -> askConfirmRestore()
             R.id.cab_select_all -> selectAll()
             R.id.cab_properties -> showMessageDetails()
-            R.id.cab_dsremo_why_flagged -> showWhyFlagged()
             R.id.cab_dsremo_report_chakshu -> reportToChakshu()
         }
     }
@@ -279,29 +277,7 @@ class ThreadAdapter(
         MessageDetailsDialog(activity, message)
     }
 
-    private fun showWhyFlagged() {
-        val message = getSelectedItems().firstOrNull() as? Message ?: return
-        val verdict = org.fossify.messages.helpers.FraudVerdictStore.get(activity, message.id)
-        val title = activity.getString(R.string.dsremo_verdict_dialog_title)
-        val body = if (verdict == null) {
-            activity.getString(R.string.dsremo_not_flagged_body)
-        } else {
-            val reasonList = if (verdict.reasons.isEmpty()) {
-                activity.getString(R.string.dsremo_verdict_no_reasons)
-            } else {
-                verdict.reasons.joinToString("\n") { reasonText -> "• $reasonText" }
-            }
-            "Category: ${verdict.category.name}\nScore: ${verdict.score}\n\nReasons:\n$reasonList"
-        }
-        androidx.appcompat.app.AlertDialog.Builder(activity)
-            .setTitle(if (verdict == null) activity.getString(R.string.dsremo_not_flagged_title) else title)
-            .setMessage(body)
-            .setPositiveButton(android.R.string.ok, null)
-            .show()
-        finishActMode()
-    }
-
-    private fun wrapDsremoSafeUrlSpans(textView: android.widget.TextView, messageId: Long) {
+    private fun wrapDsremoSafeUrlSpans(textView: android.widget.TextView) {
         val charSeq = textView.text ?: return
         val spannable = if (charSeq is android.text.Spannable) {
             charSeq
@@ -320,7 +296,7 @@ class ThreadAdapter(
             val url = oldSpan.url ?: continue
             spannable.removeSpan(oldSpan)
             spannable.setSpan(
-                org.fossify.messages.helpers.DsremoSafeUrlSpan(url, messageId),
+                org.fossify.messages.helpers.DsremoSafeUrlSpan(url),
                 start, end, flags
             )
         }
@@ -445,7 +421,7 @@ class ThreadAdapter(
             val isExpanded = expandedMessageIds.contains(message.id)
             threadMessageBody.apply {
                 text = message.body
-                wrapDsremoSafeUrlSpans(this, message.id)
+                wrapDsremoSafeUrlSpans(this)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
                 beVisibleIf(message.body.isNotEmpty())
                 maxLines = if (isExpanded) EXPANDED_MAX_LINES else COLLAPSED_MAX_LINES

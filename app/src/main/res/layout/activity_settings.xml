@@ -425,21 +425,6 @@
             </RelativeLayout>
 
             <RelativeLayout
-                android:id="@+id/settings_dsremo_fraud_filter_holder"
-                style="@style/SettingsHolderSwitchStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <org.fossify.commons.views.MyMaterialSwitch
-                    android:id="@+id/settings_dsremo_fraud_filter"
-                    style="@style/SettingsSwitchStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/dsremo_fraud_filter" />
-
-            </RelativeLayout>
-
-            <RelativeLayout
                 android:id="@+id/settings_dsremo_outbound_otp_guard_holder"
                 style="@style/SettingsHolderSwitchStyle"
                 android:layout_width="match_parent"
@@ -504,23 +489,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/dsremo_auto_delete_missed_call_sms" />
-
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:id="@+id/settings_dsremo_rules_holder"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?selectableItemBackground"
-                android:paddingHorizontal="@dimen/normal_margin"
-                android:paddingVertical="@dimen/medium_margin">
-
-                <org.fossify.commons.views.MyTextView
-                    android:id="@+id/settings_dsremo_rules_label"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="@dimen/normal_text_size"
-                    android:text="@string/dsremo_rules_open" />
 
             </RelativeLayout>
 

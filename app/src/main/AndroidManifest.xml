@@ -68,20 +68,6 @@
             android:parentActivityName=".activities.MainActivity" />
 
         <activity
-            android:name=".activities.DsremoFilteredActivity"
-            android:configChanges="orientation"
-            android:exported="false"
-            android:label="@string/dsremo_show_filtered"
-            android:parentActivityName=".activities.MainActivity" />
-
-        <activity
-            android:name=".activities.DsremoRulesActivity"
-            android:configChanges="orientation"
-            android:exported="false"
-            android:label="@string/dsremo_rules_title"
-            android:parentActivityName=".activities.SettingsActivity" />
-
-        <activity
             android:name=".activities.ThreadActivity"
             android:configChanges="orientation"
             android:exported="false"

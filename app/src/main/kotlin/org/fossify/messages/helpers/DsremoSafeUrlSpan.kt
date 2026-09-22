@@ -12,15 +12,11 @@ import org.fossify.messages.R
 
 class DsremoSafeUrlSpan(
     private val urlInSpan: String,
-    private val messageId: Long,
 ) : URLSpan(urlInSpan) {
 
     override fun onClick(widget: View) {
         val context = widget.context
         val analysis = DsremoUrlSanitizer.analyze(urlInSpan)
-        val verdict = FraudVerdictStore.get(context, messageId)
-        val isFlaggedMessage = verdict != null &&
-            verdict.category != FraudFilter.Category.INBOX
 
         if (analysis.refuse) {
             android.widget.Toast.makeText(
@@ -30,26 +26,21 @@ class DsremoSafeUrlSpan(
             ).show()
             return
         }
-        if (!isFlaggedMessage && analysis.warnings.isEmpty()) {
+        if (analysis.warnings.isEmpty()) {
             openExternally(context, Uri.parse(analysis.sanitized))
             return
         }
-        showConfirmDialog(context, analysis, isFlaggedMessage)
+        showConfirmDialog(context, analysis)
     }
 
     private fun showConfirmDialog(
         context: Context,
         analysis: DsremoUrlSanitizer.Analysis,
-        isFlaggedMessage: Boolean,
     ) {
         val message = StringBuilder().apply {
             append(context.getString(R.string.dsremo_safe_url_about_to_open))
             append("\n\n")
             append(analysis.sanitized)
-            if (isFlaggedMessage) {
-                append("\n\n")
-                append(context.getString(R.string.dsremo_safe_url_flagged_message))
-            }
             if (analysis.warnings.isNotEmpty()) {
                 append("\n\n")
                 append(context.getString(R.string.dsremo_safe_url_warnings))

@@ -19,7 +19,6 @@ const val NOTIFICATION_CHANNEL_ID = "fossify_messages"
 const val SHOW_CHARACTER_COUNTER = "show_character_counter"
 const val DSREMO_AUTO_DELETE_OTPS = "dsremo_auto_delete_otps"
 const val DSREMO_OTP_DELETE_MINUTES = 15
-const val DSREMO_FRAUD_FILTER_ENABLED = "dsremo_fraud_filter_enabled"
 const val DSREMO_OUTBOUND_OTP_GUARD = "dsremo_outbound_otp_guard"
 const val DSREMO_AUTO_BLOCK_SIMILAR = "dsremo_auto_block_similar"
 const val DSREMO_AUTO_DELETE_MISSED_CALL_SMS = "dsremo_auto_delete_missed_call_sms"

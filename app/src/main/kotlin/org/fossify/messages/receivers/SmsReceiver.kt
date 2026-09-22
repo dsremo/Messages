@@ -27,9 +27,6 @@ import org.fossify.messages.extensions.updateConversationArchivedStatus
 import org.fossify.messages.helpers.DSREMO_OTP_DELETE_MINUTES
 import org.fossify.messages.helpers.DsremoMissedCallSmsDetector
 import org.fossify.messages.helpers.DsremoOtpDetector
-import org.fossify.messages.helpers.DsremoSimilarBlocker
-import org.fossify.messages.helpers.FraudFilter
-import org.fossify.messages.helpers.FraudVerdictStore
 import org.fossify.messages.helpers.ReceiverUtils.isMessageFilteredOut
 import org.fossify.messages.helpers.refreshConversations
 import org.fossify.messages.helpers.refreshMessages
@@ -85,25 +82,6 @@ class SmsReceiver : BroadcastReceiver() {
                 val threadId = appContext.getThreadId(address)
                 val subscriptionId = intent.getIntExtra("subscription", -1)
 
-                val baseVerdict = if (!looksLikeOtp && appContext.config.dsremoFraudFilterEnabled) {
-                    FraudFilter.classify(appContext, address, body)
-                } else {
-                    FraudFilter.Verdict(FraudFilter.Category.INBOX, 0, if (looksLikeOtp) listOf("OTP whitelist bypass") else emptyList())
-                }
-                Log.w("DsremoSms", "  verdict=${baseVerdict.category} score=${baseVerdict.score} reasons=${baseVerdict.reasons}")
-
-                val verdict = if (
-                    !looksLikeOtp &&
-                    appContext.config.dsremoAutoBlockSimilar &&
-                    baseVerdict.category != FraudFilter.Category.SPAM &&
-                    DsremoSimilarBlocker.isSimilarToBlocked(appContext, body)
-                ) {
-                    FraudFilter.Verdict(FraudFilter.Category.SPAM, baseVerdict.score, baseVerdict.reasons + "similar_to_blocked")
-                } else baseVerdict
-                if (verdict.category == FraudFilter.Category.SPAM) {
-                    DsremoSimilarBlocker.addSignature(appContext, body)
-                }
-
                 handleMessageSync(
                     context = appContext,
                     address = address,
@@ -112,8 +90,7 @@ class SmsReceiver : BroadcastReceiver() {
                     date = date,
                     threadId = threadId,
                     subscriptionId = subscriptionId,
-                    status = status,
-                    verdict = verdict
+                    status = status
                 )
             } finally {
                 pending.finish()
@@ -131,11 +108,8 @@ class SmsReceiver : BroadcastReceiver() {
         threadId: Long,
         type: Int = Telephony.Sms.MESSAGE_TYPE_INBOX,
         subscriptionId: Int,
-        status: Int,
-        verdict: FraudFilter.Verdict = FraudFilter.Verdict(FraudFilter.Category.INBOX, 0, emptyList())
+        status: Int
     ) {
-        val effectiveRead = if (verdict.category == FraudFilter.Category.SPAM) 1 else read
-        val suppressNotification = verdict.category != FraudFilter.Category.INBOX
         val photoUri = SimpleContactsHelper(context).getPhotoUriFromPhoneNumber(address)
         val bitmap = context.getNotificationBitmap(photoUri)
 
@@ -144,7 +118,7 @@ class SmsReceiver : BroadcastReceiver() {
             subject = subject,
             body = body,
             date = date,
-            read = effectiveRead,
+            read = read,
             threadId = threadId,
             type = type,
             subscriptionId = subscriptionId
@@ -155,8 +129,6 @@ class SmsReceiver : BroadcastReceiver() {
                 context, threadId, newMessageId, DSREMO_OTP_DELETE_MINUTES
             )
         }
-
-        FraudVerdictStore.save(context, newMessageId, verdict)
 
         context.getConversations(threadId).firstOrNull()?.let { conv ->
             runCatching { context.insertOrUpdateConversation(conv) }
@@ -195,24 +167,20 @@ class SmsReceiver : BroadcastReceiver() {
 
         context.messagesDB.insertOrUpdate(message)
 
-        if (verdict.category == FraudFilter.Category.SPAM) {
-            context.updateConversationArchivedStatus(threadId, true)
-        } else if (context.shouldUnarchive()) {
+        if (context.shouldUnarchive()) {
             context.updateConversationArchivedStatus(threadId, false)
         }
 
         refreshMessages()
         refreshConversations()
 
-        if (!suppressNotification) {
-            context.showReceivedMessageNotification(
-                messageId = newMessageId,
-                address = address,
-                senderName = senderName,
-                body = body,
-                threadId = threadId,
-                bitmap = bitmap
-            )
-        }
+        context.showReceivedMessageNotification(
+            messageId = newMessageId,
+            address = address,
+            senderName = senderName,
+            body = body,
+            threadId = threadId,
+            bitmap = bitmap
+        )
     }
 }
