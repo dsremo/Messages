@@ -26,7 +26,3 @@ Tietosuojasi on ensisijainen prioriteettimme. Fossify Messenger toimii ilman my�
 
 Vaihda Fossify Messengeriin kokeaksesi viestinnän kuten sen kuuluu olla - yksityistä, tehokasta ja käyttäjäystävällistä. Lataa nyt ja liity yhteisöömme, joka on sitoutunut turvaamaan viestintäkokemuksesi.
 
-Löydä lisää Fossify sovelluksia: https://www.fossify.org
-Avoin lähdekoodi: https://www.github.com/FossifyOrg
-Liity yhteisöön Redditissä: https://www.reddit.com/r/Fossify
-Ole yhteydessä Telegramissa: https://t.me/Fossify

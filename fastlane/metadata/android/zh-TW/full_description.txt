@@ -26,7 +26,3 @@ Fossify Messenger 是您值得信賴的通訊夥伴，旨在以多種方式提�
 
 立即轉用 Fossify Messenger，體驗應有的通訊方式——私密、高效且友善。立即下載，加入我們致力於保護您通訊體驗的社群。
 
-探索更多 Fossify 應用程式：https://www.fossify.org
-開源程式碼：https://www.github.com/FossifyOrg
-加入 Reddit 社群：https://www.reddit.com/r/Fossify
-在 Telegram 上連接：https://t.me/Fossify

@@ -193,7 +193,10 @@ class NewConversationActivity : SimpleActivity() {
             ContactsAdapter(this, contacts, binding.contactsList) {
                 hideKeyboard()
                 val contact = it as SimpleContact
-                maybeShowNumberPickerDialog(contact.phoneNumbers) { number ->
+                val uniquePhoneNumbers = ArrayList(
+                    contact.phoneNumbers.distinctBy { phoneNumber -> phoneNumber.normalizedNumber }
+                )
+                maybeShowNumberPickerDialog(uniquePhoneNumbers) { number ->
                     launchThreadActivity(number.normalizedNumber, contact.name)
                 }
             }.apply {

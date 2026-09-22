@@ -26,7 +26,3 @@ Fossify 信息是您值得信赖的通讯伴侣，旨在以多种方式增强您
 
 切换到 Fossify 信息，体验本该如此的通讯——私密、高效且用户友好。立即下载并加入我们的社区，共同守护您的通讯体验。
 
-探索更多 Fossify 应用：https://www.fossify.org
-开源代码：https://www.github.com/FossifyOrg
-加入 Reddit 社区：https://www.reddit.com/r/Fossify
-在 Telegram 上联系：https://t.me/Fossify

@@ -13,7 +13,10 @@ import com.bumptech.glide.Glide
 import com.qtalk.recyclerviewfastscroller.RecyclerViewFastScroller
 import org.fossify.commons.adapters.MyRecyclerViewListAdapter
 import org.fossify.commons.extensions.applyColorFilter
+import org.fossify.commons.extensions.beGone
+import org.fossify.commons.extensions.beVisible
 import org.fossify.commons.extensions.beVisibleIf
+import org.fossify.commons.extensions.copyToClipboard
 import org.fossify.commons.extensions.formatDateOrTime
 import org.fossify.commons.extensions.getContrastColor
 import org.fossify.commons.extensions.getTextSize
@@ -22,6 +25,7 @@ import org.fossify.commons.helpers.FontHelper
 import org.fossify.commons.helpers.SimpleContactsHelper
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.commons.views.MyRecyclerView
+import org.fossify.messages.R
 import org.fossify.messages.activities.SimpleActivity
 import org.fossify.messages.databinding.ItemConversationBinding
 import org.fossify.messages.extensions.config
@@ -157,6 +161,22 @@ abstract class BaseConversationsAdapter(
             conversationAddress.apply {
                 text = buildAddressWithDsremoChip(conversation)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize * 1.2f)
+                tooltipText = activity.getString(R.string.dsremo_dlt_legend)
+                contentDescription = activity.getString(R.string.dsremo_dlt_legend)
+            }
+
+            val otpExtraction = org.fossify.messages.helpers.DsremoOtpExtractor.extract(conversation.snippet)
+            if (otpExtraction != null && !conversation.read) {
+                otpChip.beVisible()
+                otpChip.text = activity.getString(R.string.dsremo_copy_otp_chip, otpExtraction.otp)
+                otpChip.setTextColor(properPrimaryColor.getContrastColor())
+                otpChip.background?.applyColorFilter(properPrimaryColor)
+                otpChip.setOnClickListener {
+                    activity.copyToClipboard(otpExtraction.otp)
+                }
+            } else {
+                otpChip.beGone()
+                otpChip.setOnClickListener(null)
             }
 
             conversationBodyShort.apply {

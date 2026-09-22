@@ -13,7 +13,7 @@ object DsremoOtpDetector {
         "(?i)\\b(otp|code|verification|verify|password|passcode|one[- ]?time|2fa|two[- ]?factor)\\b"
     )
     private val P_SHORT_DIGIT_RUN = Pattern.compile("\\b\\d{4,8}\\b")
-    private const val MAX_BODY_LENGTH = 600
+    private const val MAX_BODY_LENGTH = 2000
 
     fun looksLikeOtp(body: String?): Boolean {
         if (body.isNullOrBlank()) return false

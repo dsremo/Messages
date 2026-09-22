@@ -70,7 +70,10 @@ class ContactsAdapter(
             }
 
             itemContactNumber.apply {
-                text = TextUtils.join(", ", contact.phoneNumbers.map { it.normalizedNumber })
+                val formattedNumbers = contact.phoneNumbers
+                    .map { phoneNumber -> org.fossify.messages.helpers.PhoneNumberDsremoFormatter.format(phoneNumber.normalizedNumber) }
+                    .distinct()
+                text = TextUtils.join(", ", formattedNumbers)
                 setTextColor(textColor)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
             }

@@ -94,7 +94,22 @@ class MainActivity : SimpleActivity() {
         setupOptionsMenu()
         refreshMenuItems()
 
-        setupEdgeToEdge(padBottomImeAndSystem = listOf(binding.conversationsList))
+        setupEdgeToEdge()
+        val fabClearancePx = (96 * resources.displayMetrics.density).toInt()
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.conversationsList) { targetView, windowInsets ->
+            val systemAndImeInsets = windowInsets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars()
+                    or androidx.core.view.WindowInsetsCompat.Type.ime()
+            )
+            targetView.setPadding(
+                targetView.paddingLeft,
+                targetView.paddingTop,
+                targetView.paddingRight,
+                systemAndImeInsets.bottom + fabClearancePx
+            )
+            windowInsets
+        }
+        androidx.core.view.ViewCompat.requestApplyInsets(binding.conversationsList)
 
         checkAndDeleteOldRecycleBinMessages()
         clearAllMessagesIfNeeded {
@@ -133,6 +148,34 @@ class MainActivity : SimpleActivity() {
         binding.conversationsProgressBar.setIndicatorColor(properPrimaryColor)
         binding.conversationsProgressBar.trackColor = properPrimaryColor.adjustAlpha(LOWER_ALPHA)
         checkShortcut()
+        promptBatteryOptimizationExemptionIfNeeded()
+    }
+
+    private fun promptBatteryOptimizationExemptionIfNeeded() {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M) return
+        if (config.batteryOptimizationPromptDismissed) return
+        val powerManager = getSystemService(android.content.Context.POWER_SERVICE) as? android.os.PowerManager ?: return
+        if (powerManager.isIgnoringBatteryOptimizations(packageName)) return
+        com.google.android.material.snackbar.Snackbar.make(
+            binding.mainCoordinator,
+            "Allow unrestricted background so SMS + OTP arrive without delay",
+            com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+        ).setAction("Allow") {
+            @android.annotation.SuppressLint("BatteryLife")
+            val intent = android.content.Intent(
+                android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                android.net.Uri.parse("package:$packageName")
+            )
+            runCatching { startActivity(intent) }.onFailure {
+                runCatching { startActivity(android.content.Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }
+            }
+        }.addCallback(object : com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback<com.google.android.material.snackbar.Snackbar>() {
+            override fun onDismissed(dismissedSnackbar: com.google.android.material.snackbar.Snackbar?, dismissEvent: Int) {
+                if (dismissEvent == DISMISS_EVENT_SWIPE || dismissEvent == DISMISS_EVENT_TIMEOUT) {
+                    config.batteryOptimizationPromptDismissed = true
+                }
+            }
+        }).show()
     }
 
     override fun onPause() {
@@ -218,7 +261,8 @@ class MainActivity : SimpleActivity() {
     private fun loadMessages() {
         if (isQPlus()) {
             val roleManager = getSystemService(RoleManager::class.java)
-            if (roleManager!!.isRoleAvailable(RoleManager.ROLE_SMS)) {
+                ?: run { toast(org.fossify.commons.R.string.unknown_error_occurred); finish(); return }
+            if (roleManager.isRoleAvailable(RoleManager.ROLE_SMS)) {
                 if (roleManager.isRoleHeld(RoleManager.ROLE_SMS)) {
                     askPermissions()
                 } else {
@@ -408,6 +452,8 @@ class MainActivity : SimpleActivity() {
             .sortedWith(
                 compareByDescending<Conversation> {
                     config.pinnedConversations.contains(it.threadId.toString())
+                }.thenByDescending {
+                    if (config.showUnreadFirst) it.unreadCount > 0 else false
                 }.thenByDescending { it.date }
             ).toMutableList() as ArrayList<Conversation>
 
@@ -486,11 +532,43 @@ class MainActivity : SimpleActivity() {
         val appIconColor = config.appIconColor
         if (config.lastHandledShortcutColor != appIconColor) {
             val newConversation = getCreateNewContactShortcut(appIconColor)
-
             val manager = getSystemService(ShortcutManager::class.java)
             try {
                 manager.dynamicShortcuts = listOf(newConversation)
                 config.lastHandledShortcutColor = appIconColor
+            } catch (_: Exception) {
+            }
+        }
+        refreshRecentConversationShortcuts()
+    }
+
+    @SuppressLint("NewApi")
+    private fun refreshRecentConversationShortcuts() {
+        val manager = getSystemService(ShortcutManager::class.java) ?: return
+        ensureBackgroundThread {
+            val recentConversations = runCatching {
+                conversationsDB.getNonArchived().sortedByDescending { it.date }.take(3)
+            }.getOrDefault(emptyList())
+            val newConversationShortcut = getCreateNewContactShortcut(config.appIconColor)
+            val dynamicList = mutableListOf(newConversationShortcut)
+            recentConversations.forEachIndexed { rankIndex, conversation ->
+                val openThreadIntent = Intent(this@MainActivity, ThreadActivity::class.java).apply {
+                    action = Intent.ACTION_VIEW
+                    putExtra(THREAD_ID, conversation.threadId)
+                    putExtra(THREAD_TITLE, conversation.title)
+                }
+                val displayLabel = conversation.title.ifBlank { "Conversation" }.take(24)
+                val shortcut = ShortcutInfo.Builder(this@MainActivity, "recent_conv_${conversation.threadId}")
+                    .setShortLabel(displayLabel)
+                    .setLongLabel(displayLabel)
+                    .setIcon(Icon.createWithResource(this@MainActivity, R.mipmap.ic_launcher))
+                    .setIntent(openThreadIntent)
+                    .setRank(rankIndex + 1)
+                    .build()
+                dynamicList.add(shortcut)
+            }
+            try {
+                manager.dynamicShortcuts = dynamicList
             } catch (_: Exception) {
             }
         }

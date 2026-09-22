@@ -26,7 +26,3 @@ Fossify Messenger를 사용하면 SMS 및 MMS 메시지를 간편하게 보내 �
 
 Fossify Messenger로 전환하여 개인 정보 보호, 효율성, 사용자 편의성을 모두 갖춘 진정한 메시징 경험을 누려보세요. 지금 다운로드하고 안전한 메시징 경험을 위해 노력하는 저희 커뮤니티에 참여하세요.
 
-더 많은 Fossify 앱 보기: https://www.fossify.org
-오픈 소스 코드: https://www.github.com/FossifyOrg
-레딧 커뮤니티: https://www.reddit.com/r/Fossify
-텔레그램 : https://t.me/Fossify

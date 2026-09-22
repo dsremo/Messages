@@ -11,3 +11,9 @@ keystore.properties
 fastlane/fastlane.json
 fastlane/report.xml
 .kotlin/
+/app/libs/
+/dsremo-sso-snippets/
+*.keystore
+*.jks
+.env
+.env.*

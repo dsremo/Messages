@@ -43,8 +43,13 @@ class NotificationHelper(private val context: Context) {
         threadId: Long,
         bitmap: Bitmap?,
         sender: String?,
-        alertOnlyOnce: Boolean = false
+        alertOnlyOnce: Boolean = false,
+        isMms: Boolean = false,
     ) {
+        if (context.config.isThreadMuted(threadId)) {
+            return
+        }
+
         val hasCustomNotifications =
             context.config.customNotifications.contains(threadId.toString())
         val notificationChannelId =
@@ -80,6 +85,7 @@ class NotificationHelper(private val context: Context) {
         val deleteSmsIntent = Intent(context, DeleteSmsReceiver::class.java).apply {
             putExtra(THREAD_ID, threadId)
             putExtra(MESSAGE_ID, messageId)
+            putExtra(IS_MMS, isMms)
         }
         val deleteSmsPendingIntent =
             PendingIntent.getBroadcast(

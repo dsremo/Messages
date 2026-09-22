@@ -14,6 +14,10 @@ class Config(context: Context) : BaseConfig(context) {
         prefs.edit().putInt(USE_SIM_ID_PREFIX + number, SIMId).apply()
     }
 
+    var batteryOptimizationPromptDismissed: Boolean
+        get() = prefs.getBoolean("battery_optimization_prompt_dismissed", false)
+        set(value) = prefs.edit().putBoolean("battery_optimization_prompt_dismissed", value).apply()
+
     fun getUseSIMIdAtNumber(number: String) = prefs.getInt(USE_SIM_ID_PREFIX + number, 0)
 
     var showCharacterCounter: Boolean
@@ -79,6 +83,21 @@ class Config(context: Context) : BaseConfig(context) {
     var blockedKeywords: Set<String>
         get() = prefs.getStringSet(BLOCKED_KEYWORDS, HashSet<String>())!!
         set(blockedKeywords) = prefs.edit().putStringSet(BLOCKED_KEYWORDS, blockedKeywords).apply()
+
+    var mutedThreadIds: Set<String>
+        get() = prefs.getStringSet("dsremo_muted_thread_ids", HashSet<String>())!!
+        set(mutedThreadIds) = prefs.edit().putStringSet("dsremo_muted_thread_ids", mutedThreadIds).apply()
+
+    fun muteThread(threadId: Long) {
+        mutedThreadIds = mutedThreadIds.plus(threadId.toString())
+    }
+
+    fun unmuteThread(threadId: Long) {
+        mutedThreadIds = mutedThreadIds.minus(threadId.toString())
+    }
+
+    fun isThreadMuted(threadId: Long): Boolean =
+        mutedThreadIds.contains(threadId.toString())
 
     fun addBlockedKeyword(keyword: String) {
         blockedKeywords = blockedKeywords.plus(keyword)
@@ -160,4 +179,21 @@ class Config(context: Context) : BaseConfig(context) {
     var dsremoOutboundOtpGuard: Boolean
         get() = prefs.getBoolean(DSREMO_OUTBOUND_OTP_GUARD, true)
         set(value) = prefs.edit().putBoolean(DSREMO_OUTBOUND_OTP_GUARD, value).apply()
+
+    var dsremoAutoBlockSimilar: Boolean
+        get() = prefs.getBoolean(DSREMO_AUTO_BLOCK_SIMILAR, false)
+        set(value) = prefs.edit().putBoolean(DSREMO_AUTO_BLOCK_SIMILAR, value).apply()
+
+    var dsremoAutoDeleteMissedCallSms: Boolean
+        get() = prefs.getBoolean(DSREMO_AUTO_DELETE_MISSED_CALL_SMS, false)
+        set(value) = prefs.edit().putBoolean(DSREMO_AUTO_DELETE_MISSED_CALL_SMS, value).apply()
+
+    var showUnreadFirst: Boolean
+        get() = prefs.getBoolean("show_unread_first", false)
+        set(value) = prefs.edit().putBoolean("show_unread_first", value).apply()
+
+    var dsremoSchedRateLimit: Int
+        get() = prefs.getInt(DSREMO_SCHED_RATE_LIMIT, DSREMO_SCHED_RATE_LIMIT_DEFAULT)
+            .coerceIn(3, 20)
+        set(value) = prefs.edit().putInt(DSREMO_SCHED_RATE_LIMIT, value.coerceIn(3, 20)).apply()
 }

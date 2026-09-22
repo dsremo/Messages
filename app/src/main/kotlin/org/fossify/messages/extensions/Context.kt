@@ -1063,6 +1063,7 @@ fun Context.showReceivedMessageNotification(
     body: String,
     threadId: Long,
     bitmap: Bitmap?,
+    isMms: Boolean = false,
 ) {
     Handler(Looper.getMainLooper()).post {
         notificationHelper.showMessageNotification(
@@ -1071,7 +1072,8 @@ fun Context.showReceivedMessageNotification(
             body = body,
             threadId = threadId,
             bitmap = bitmap,
-            sender = senderName
+            sender = senderName,
+            isMms = isMms,
         )
     }
 }

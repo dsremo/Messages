@@ -26,7 +26,3 @@ Sinu privaatsus on esmatähtis. Fossify Sõnumid töötab ilma internetiühendus
 
 Kasuta rakendust Fossify Sõnumid ja saada sõnumeid nii, nagu see peaks olema - privaatselt, tõhusalt ja kasutajasõbralikul viisil. Laadi rakendus alla ja liitu meie kogukonnaga, mis on pühendunud sinu sõnumikogemuse kaitsmisele.
 
-Tutvu Fossify rakendustega: https://www.fossify.org
-Avatud lähtekood: https://www.github.com/FossifyOrg
-Liitu kogukonnaga Reddit'is: https://www.reddit.com/r/Fossify
-Suhtle Telegram'is: https://t.me/Fossify

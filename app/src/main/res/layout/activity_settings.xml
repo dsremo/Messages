@@ -35,6 +35,20 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <EditText
+                android:id="@+id/settings_search"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:hint="Search settings…"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1"
+                android:padding="12dp" />
+
             <TextView
                 android:id="@+id/settings_color_customization_section_label"
                 style="@style/SettingsSectionLabelStyle"
@@ -257,6 +271,21 @@
             </RelativeLayout>
 
             <RelativeLayout
+                android:id="@+id/settings_show_unread_first_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_show_unread_first"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Show unread conversations first" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
                 android:id="@+id/settings_use_simple_characters_holder"
                 style="@style/SettingsHolderSwitchStyle"
                 android:layout_width="match_parent"
@@ -425,6 +454,76 @@
 
             </RelativeLayout>
 
+            <RelativeLayout
+                android:id="@+id/settings_dsremo_sched_rate_limit_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_dsremo_sched_rate_limit_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dsremo_sched_rate_limit_label" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_dsremo_sched_rate_limit"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_dsremo_sched_rate_limit_label"
+                    tools:text="Warn at 5 messages/hour" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_dsremo_auto_block_similar_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_dsremo_auto_block_similar"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dsremo_auto_block_similar" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_dsremo_auto_delete_missed_call_sms_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_dsremo_auto_delete_missed_call_sms"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dsremo_auto_delete_missed_call_sms" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_dsremo_rules_holder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:paddingHorizontal="@dimen/normal_margin"
+                android:paddingVertical="@dimen/medium_margin">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_dsremo_rules_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="@dimen/normal_text_size"
+                    android:text="@string/dsremo_rules_open" />
+
+            </RelativeLayout>
+
             <include
                 android:id="@+id/settings_archive_divider"
                 layout="@layout/divider" />
@@ -540,6 +639,7 @@
                     android:text="@string/import_messages" />
 
             </RelativeLayout>
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

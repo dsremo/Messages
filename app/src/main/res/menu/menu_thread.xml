@@ -55,6 +55,21 @@
         android:title="@string/block_number"
         app:showAsAction="never" />
     <item
+        android:id="@+id/mute_conversation"
+        android:showAsAction="never"
+        android:title="@string/dsremo_mute_conversation"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/unmute_conversation"
+        android:showAsAction="never"
+        android:title="@string/dsremo_unmute_conversation"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/dsremo_report_chakshu"
+        android:showAsAction="never"
+        android:title="@string/dsremo_report_chakshu"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/delete"
         android:icon="@drawable/ic_delete_vector"
         android:showAsAction="never"

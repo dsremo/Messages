@@ -94,6 +94,14 @@ class SettingsActivity : SimpleActivity() {
             scrollingView = binding.settingsNestedScrollview,
             topAppBar = binding.settingsAppbar
         )
+
+        binding.settingsSearch.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                org.fossify.messages.dsremo.SettingsSearchFilter.apply(binding.settingsHolder, s?.toString().orEmpty())
+            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
     }
 
     override fun onResume() {
@@ -109,6 +117,7 @@ class SettingsActivity : SimpleActivity() {
         setupChangeDateTimeFormat()
         setupFontSize()
         setupShowCharacterCounter()
+        setupShowUnreadFirst()
         setupUseSimpleCharacters()
         setupSendOnEnter()
         setupEnableDeliveryReports()
@@ -118,6 +127,10 @@ class SettingsActivity : SimpleActivity() {
         setupDsremoAutoDeleteOtps()
         setupDsremoFraudFilter()
         setupDsremoOutboundOtpGuard()
+        setupDsremoSchedRateLimit()
+        setupDsremoAutoBlockSimilar()
+        setupDsremoAutoDeleteMissedCallSms()
+        setupDsremoRulesEntry()
         setupLockScreenVisibility()
         setupMMSFileSizeLimit()
         setupUseRecycleBin()
@@ -204,31 +217,21 @@ class SettingsActivity : SimpleActivity() {
     }
 
     private fun setupManageBlockedNumbers() = binding.apply {
-        settingsManageBlockedNumbers.text =
-            addLockedLabelIfNeeded(org.fossify.commons.R.string.manage_blocked_numbers)
+        settingsManageBlockedNumbers.text = getString(org.fossify.commons.R.string.manage_blocked_numbers)
         settingsManageBlockedNumbersHolder.beVisible()
         settingsManageBlockedNumbersHolder.setOnClickListener {
-            if (isOrWasThankYouInstalled()) {
-                Intent(this@SettingsActivity, ManageBlockedNumbersActivity::class.java).apply {
-                    startActivity(this)
-                }
-            } else {
-                FeatureLockedDialog(this@SettingsActivity) { }
+            Intent(this@SettingsActivity, ManageBlockedNumbersActivity::class.java).apply {
+                startActivity(this)
             }
         }
     }
 
     private fun setupManageBlockedKeywords() = binding.apply {
-        settingsManageBlockedKeywords.text =
-            addLockedLabelIfNeeded(R.string.manage_blocked_keywords)
+        settingsManageBlockedKeywords.text = getString(R.string.manage_blocked_keywords)
 
         settingsManageBlockedKeywordsHolder.setOnClickListener {
-            if (isOrWasThankYouInstalled()) {
-                Intent(this@SettingsActivity, ManageBlockedKeywordsActivity::class.java).apply {
-                    startActivity(this)
-                }
-            } else {
-                FeatureLockedDialog(this@SettingsActivity) { }
+            Intent(this@SettingsActivity, ManageBlockedKeywordsActivity::class.java).apply {
+                startActivity(this)
             }
         }
     }
@@ -266,6 +269,14 @@ class SettingsActivity : SimpleActivity() {
         settingsShowCharacterCounterHolder.setOnClickListener {
             settingsShowCharacterCounter.toggle()
             config.showCharacterCounter = settingsShowCharacterCounter.isChecked
+        }
+    }
+
+    private fun setupShowUnreadFirst() = binding.apply {
+        settingsShowUnreadFirst.isChecked = config.showUnreadFirst
+        settingsShowUnreadFirstHolder.setOnClickListener {
+            settingsShowUnreadFirst.toggle()
+            config.showUnreadFirst = settingsShowUnreadFirst.isChecked
         }
     }
 
@@ -338,6 +349,48 @@ class SettingsActivity : SimpleActivity() {
         settingsDsremoOutboundOtpGuardHolder.setOnClickListener {
             settingsDsremoOutboundOtpGuard.toggle()
             config.dsremoOutboundOtpGuard = settingsDsremoOutboundOtpGuard.isChecked
+        }
+    }
+
+    private fun setupDsremoSchedRateLimit() = binding.apply {
+        settingsDsremoSchedRateLimit.text = getString(
+            R.string.dsremo_sched_rate_limit_value, config.dsremoSchedRateLimit
+        )
+        settingsDsremoSchedRateLimitHolder.setOnClickListener {
+            val choices = listOf(3, 5, 10, 15, 20)
+            val items = ArrayList(
+                choices.map { choice ->
+                    RadioItem(choice, getString(R.string.dsremo_sched_rate_limit_value, choice))
+                }
+            )
+            RadioGroupDialog(this@SettingsActivity, items, config.dsremoSchedRateLimit) {
+                config.dsremoSchedRateLimit = it as Int
+                settingsDsremoSchedRateLimit.text = getString(
+                    R.string.dsremo_sched_rate_limit_value, config.dsremoSchedRateLimit
+                )
+            }
+        }
+    }
+
+    private fun setupDsremoAutoBlockSimilar() = binding.apply {
+        settingsDsremoAutoBlockSimilar.isChecked = config.dsremoAutoBlockSimilar
+        settingsDsremoAutoBlockSimilarHolder.setOnClickListener {
+            settingsDsremoAutoBlockSimilar.toggle()
+            config.dsremoAutoBlockSimilar = settingsDsremoAutoBlockSimilar.isChecked
+        }
+    }
+
+    private fun setupDsremoAutoDeleteMissedCallSms() = binding.apply {
+        settingsDsremoAutoDeleteMissedCallSms.isChecked = config.dsremoAutoDeleteMissedCallSms
+        settingsDsremoAutoDeleteMissedCallSmsHolder.setOnClickListener {
+            settingsDsremoAutoDeleteMissedCallSms.toggle()
+            config.dsremoAutoDeleteMissedCallSms = settingsDsremoAutoDeleteMissedCallSms.isChecked
+        }
+    }
+
+    private fun setupDsremoRulesEntry() = binding.apply {
+        settingsDsremoRulesHolder.setOnClickListener {
+            startActivity(android.content.Intent(this@SettingsActivity, DsremoRulesActivity::class.java))
         }
     }
 

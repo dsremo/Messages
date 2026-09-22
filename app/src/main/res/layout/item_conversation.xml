@@ -95,8 +95,9 @@
         android:src="@drawable/ic_pin_filled_vector"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/conversation_body_short"
-        app:layout_constraintEnd_toStartOf="@id/unread_count_badge"
+        app:layout_constraintEnd_toStartOf="@id/otp_chip"
         app:layout_constraintTop_toTopOf="@id/conversation_body_short"
+        tools:ignore="ContentDescription"
         tools:visibility="visible" />
 
     <org.fossify.commons.views.MyTextView
@@ -107,9 +108,27 @@
         android:gravity="center"
         android:textSize="@dimen/list_tertiary_text_size"
         android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@id/conversation_image"
+        app:layout_constraintTop_toTopOf="@id/conversation_image"
+        tools:text="42"
+        tools:visibility="visible" />
+
+    <org.fossify.commons.views.MyTextView
+        android:id="@+id/otp_chip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/circle_background"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:paddingHorizontal="@dimen/small_margin"
+        android:paddingVertical="@dimen/tiny_margin"
+        android:textSize="@dimen/list_tertiary_text_size"
+        android:textStyle="bold"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/conversation_body_short"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/conversation_body_short"
-        tools:text="42"
+        tools:text="COPY 483920"
         tools:visibility="visible" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -44,6 +44,10 @@ class MmsReceiver : MmsReceivedReceiver() {
     override fun onMessageReceived(context: Context, messageUri: Uri) {
         val mms = context.getLatestMMS() ?: return
         val address = mms.getSender()?.phoneNumbers?.firstOrNull()?.normalizedNumber ?: ""
+        if (address.isBlank()) {
+            android.util.Log.w("MmsReceiver", "MMS with blank sender address — dropping to avoid bypassing block-list")
+            return
+        }
         val size = context.resources.getDimension(R.dimen.notification_large_icon_size).toInt()
         ensureBackgroundThread {
             handleMmsMessage(context, mms, size, address)
@@ -60,16 +64,17 @@ class MmsReceiver : MmsReceivedReceiver() {
         size: Int,
         address: String
     ) {
-        val glideBitmap = try {
+        val firstAttachmentUri = runCatching {
+            mms.attachment?.attachments?.firstOrNull()?.getUri()
+        }.getOrNull()
+        val glideBitmap = if (firstAttachmentUri == null) null else runCatching {
             Glide.with(context)
                 .asBitmap()
-                .load(mms.attachment!!.attachments.first().getUri())
+                .load(firstAttachmentUri)
                 .centerCrop()
                 .into(size, size)
                 .get()
-        } catch (e: Exception) {
-            null
-        }
+        }.getOrNull()
 
 
         val senderName = context.getMyContactsCursor(favoritesOnly = false, withPhoneNumbersOnly = true).use {
@@ -82,7 +87,8 @@ class MmsReceiver : MmsReceivedReceiver() {
             senderName = senderName,
             body = mms.body,
             threadId = mms.threadId,
-            bitmap = glideBitmap
+            bitmap = glideBitmap,
+            isMms = true,
         )
 
         val conversation = context.getConversations(mms.threadId).firstOrNull() ?: return

@@ -142,6 +142,7 @@
     <string name="dsremo_auto_delete_otps">Auto-delete OTP/verification messages after 15 min</string>
     <string name="dsremo_fraud_filter">Filter India SMS fraud + promotional ads (KYC scams, UPI refund, parcel, electricity, APK traps, -P promotional)</string>
     <string name="dsremo_why_flagged">Why was this flagged?</string>
+    <string name="dsremo_report_chakshu_clipboard">Message copied; opens sancharsaathi.gov.in/sfc</string>
     <string name="dsremo_report_chakshu">Report fraud (Chakshu)</string>
     <string name="dsremo_not_flagged_title">This message was not flagged</string>
     <string name="dsremo_not_flagged_body">No fraud rule fired for this message. It was delivered to the normal inbox.</string>
@@ -151,6 +152,18 @@
     <string name="dsremo_outbound_otp_body">It looks like you\'re sending a one-time password to someone who just sent you an OTP message.\n\nThis is the most common scam pattern in India: fraudsters call or text claiming to be from a bank, CBI, FedEx, or a delivery service, and trick people into sharing the OTP they just received.\n\nNobody legitimate will ever ask you to share an OTP, PIN, or CVV.\n\nIf you\'re sure this is safe (e.g., you\'re manually relaying to another device of your own), tap Send Anyway after the 5-second hold.</string>
     <string name="dsremo_outbound_otp_send_anyway">Send anyway</string>
     <string name="dsremo_outbound_otp_guard">Warn before sending an OTP/code if the thread recently received one</string>
+    <string name="dsremo_auto_block_similar">Auto-block messages similar to past spam — learns from spam-marked messages</string>
+    <string name="dsremo_auto_delete_missed_call_sms">Auto-delete operator missed-call notification SMS</string>
+    <string name="dsremo_sched_rate_limit_label">Scheduled message rate limit</string>
+    <string name="dsremo_sched_rate_limit_warning">You have scheduled %1$d messages to %2$s in the last hour. This may look like spam to the recipient. Continue?</string>
+    <string name="dsremo_recycle_bin_empty">Recycle bin is empty</string>
+    <string name="dsremo_sched_rate_limit_value">Warn at %1$d messages/hour</string>
+    <string name="dsremo_outbound_link_title">Are you sure about this link?</string>
+    <string name="dsremo_outbound_link_body">The message you\'re about to send contains a link that looks risky:</string>
+    <string name="dsremo_outbound_link_send_anyway">Send anyway</string>
+    <string name="dsremo_rules_title">Fraud filter rules</string>
+    <string name="dsremo_rules_intro">Toggle individual rules without rebuilding the app. Each rule contributes to the overall fraud score; turning one off removes its points from the classifier.</string>
+    <string name="dsremo_rules_open">Edit fraud filter rules…</string>
     <string name="dsremo_safe_url_title">Open this link?</string>
     <string name="dsremo_safe_url_about_to_open">You are about to open:</string>
     <string name="dsremo_safe_url_flagged_message">This message was flagged by the fraud filter — be cautious before tapping links inside it.</string>
@@ -169,6 +182,15 @@
     <string name="dsremo_filtered_open_thread">Open thread</string>
     <string name="dsremo_filtered_not_fraud">Not fraud</string>
     <string name="dsremo_filtered_marked_not_fraud">Verdict cleared</string>
+    <string name="dsremo_dlt_legend">Tag legend: [P] promotional, [S] service, [T] transactional, [G] government, [?] unknown</string>
+    <string name="dsremo_copy_otp_chip">Copy %1$s</string>
+    <string name="dsremo_sim_slot_hint">SIM slot used for this message</string>
+    <string name="dsremo_expand_show_more">Show more</string>
+    <string name="dsremo_expand_show_less">Show less</string>
+    <string name="dsremo_mute_conversation">Mute conversation</string>
+    <string name="dsremo_unmute_conversation">Unmute conversation</string>
+    <string name="dsremo_conversation_muted">Conversation muted</string>
+    <string name="dsremo_conversation_unmuted">Conversation unmuted</string>
     <!--
         Haven't found some strings? There's more at
         https://github.com/FossifyOrg/Commons/tree/master/commons/src/main/res

@@ -365,6 +365,9 @@ class ThreadActivity : SimpleActivity() {
             findItem(R.id.block_number).title =
                 addLockedLabelIfNeeded(org.fossify.commons.R.string.block_number)
             findItem(R.id.block_number).isVisible = !isRecycleBin
+            val muted = config.isThreadMuted(threadId)
+            findItem(R.id.mute_conversation).isVisible = !isRecycleBin && !muted
+            findItem(R.id.unmute_conversation).isVisible = !isRecycleBin && muted
             findItem(R.id.dial_number).isVisible =
                 participants.size == 1 && !isSpecialNumber() && !isRecycleBin
             findItem(R.id.manage_people).isVisible = !isSpecialNumber() && !isRecycleBin
@@ -388,6 +391,17 @@ class ThreadActivity : SimpleActivity() {
     private fun handleMenuItemAction(menuItem: MenuItem): Boolean {
         when (menuItem.itemId) {
             R.id.block_number -> tryBlocking()
+            R.id.mute_conversation -> {
+                config.muteThread(threadId)
+                toast(R.string.dsremo_conversation_muted)
+                refreshMenuItems()
+            }
+            R.id.unmute_conversation -> {
+                config.unmuteThread(threadId)
+                toast(R.string.dsremo_conversation_unmuted)
+                refreshMenuItems()
+            }
+            R.id.dsremo_report_chakshu -> org.fossify.messages.dsremo.ChakshuReporter.launch(this, messages)
             R.id.delete -> askConfirmDelete()
             R.id.restore -> askConfirmRestoreAll()
             R.id.archive -> archiveConversation()
@@ -1096,11 +1110,7 @@ class ThreadActivity : SimpleActivity() {
     }
 
     private fun tryBlocking() {
-        if (isOrWasThankYouInstalled()) {
-            blockNumber()
-        } else {
-            FeatureLockedDialog(this) { }
-        }
+        blockNumber()
     }
 
     private fun blockNumber() {
@@ -1172,7 +1182,7 @@ class ThreadActivity : SimpleActivity() {
     }
 
     private fun dialNumber() {
-        val phoneNumber = participants.first().phoneNumbers.first().normalizedNumber
+        val phoneNumber = participants.firstOrNull()?.phoneNumbers?.firstOrNull()?.normalizedNumber ?: return
         dialNumber(phoneNumber)
     }
 
@@ -1539,7 +1549,36 @@ class ThreadActivity : SimpleActivity() {
             return
         }
 
+        val linkWarning = org.fossify.messages.helpers.DsremoOutboundLinkGuard.analyze(text)
+        if (linkWarning != null) {
+            promptDsremoOutboundLinkGuard(linkWarning) {
+                proceedSendMessage()
+            }
+            return
+        }
+
         proceedSendMessage()
+    }
+
+    private fun promptDsremoOutboundLinkGuard(
+        warning: org.fossify.messages.helpers.DsremoOutboundLinkGuard.Warning,
+        onConfirmed: () -> Unit
+    ) {
+        val body = StringBuilder().apply {
+            append(getString(R.string.dsremo_outbound_link_body))
+            append("\n\n")
+            append(warning.matchedUrl)
+            append("\n\n")
+            append(warning.reasons.joinToString("\n") { reasonText -> "• $reasonText" })
+        }.toString()
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(getString(R.string.dsremo_outbound_link_title))
+            .setMessage(body)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(getString(R.string.dsremo_outbound_link_send_anyway)) { _, _ ->
+                onConfirmed()
+            }
+            .show()
     }
 
     private fun proceedSendMessage() {
@@ -1552,9 +1591,47 @@ class ThreadActivity : SimpleActivity() {
             ?: SmsManager.getDefaultSmsSubscriptionId()
 
         if (isScheduledMessage) {
-            sendScheduledMessage(text, subscriptionId)
+            val finalText = text
+            checkDsremoSchedRateLimit {
+                sendScheduledMessage(finalText, subscriptionId)
+            }
         } else {
             sendNormalMessage(text, subscriptionId)
+        }
+    }
+
+    private fun checkDsremoSchedRateLimit(onProceed: () -> Unit) {
+        val threshold = config.dsremoSchedRateLimit
+        val addresses = participants.getAddresses()
+        if (addresses.isEmpty()) {
+            onProceed()
+            return
+        }
+        ensureBackgroundThread {
+            val count = org.fossify.messages.helpers.DsremoSchedRateLimit
+                .countNearbyScheduledForAddresses(this, addresses)
+            runOnUiThread {
+                if (count >= threshold) {
+                    val recipientLabel = participants.firstOrNull()?.name
+                        ?: addresses.first()
+                    androidx.appcompat.app.AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.dsremo_sched_rate_limit_label))
+                        .setMessage(
+                            getString(
+                                R.string.dsremo_sched_rate_limit_warning,
+                                count,
+                                recipientLabel
+                            )
+                        )
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .setPositiveButton(getString(R.string.dsremo_outbound_otp_send_anyway)) { _, _ ->
+                            onProceed()
+                        }
+                        .show()
+                } else {
+                    onProceed()
+                }
+            }
         }
     }
 

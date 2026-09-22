@@ -4,14 +4,27 @@
     android:id="@+id/thread_date_time_holder"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/medium_margin">
+    android:layout_marginTop="@dimen/medium_margin"
+    android:layout_marginBottom="@dimen/small_margin"
+    android:paddingHorizontal="@dimen/activity_margin">
+
+    <View
+        android:id="@+id/thread_date_time_divider_start"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_centerVertical="true"
+        android:alpha="0.25"
+        android:background="?android:attr/textColorSecondary" />
 
     <TextView
         android:id="@+id/thread_date_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
+        android:background="?android:attr/colorBackground"
+        android:paddingHorizontal="@dimen/normal_margin"
         android:textSize="@dimen/normal_text_size"
+        android:textStyle="bold"
         tools:text="13 March, 13:30" />
 
     <ImageView
@@ -22,7 +35,9 @@
         android:layout_alignBottom="@id/thread_date_time"
         android:layout_marginEnd="@dimen/small_margin"
         android:layout_toStartOf="@id/thread_date_time"
-        android:src="@drawable/ic_sim_vector" />
+        android:contentDescription="@string/dsremo_sim_slot_hint"
+        android:src="@drawable/ic_sim_vector"
+        android:tooltipText="@string/dsremo_sim_slot_hint" />
 
     <TextView
         android:id="@+id/thread_sim_number"
@@ -32,9 +47,11 @@
         android:layout_alignTop="@+id/thread_sim_icon"
         android:layout_alignEnd="@+id/thread_sim_icon"
         android:layout_alignBottom="@+id/thread_sim_icon"
+        android:contentDescription="@string/dsremo_sim_slot_hint"
         android:gravity="center"
         android:textColor="@color/md_grey_black"
         android:textSize="@dimen/smaller_text_size"
+        android:tooltipText="@string/dsremo_sim_slot_hint"
         tools:text="1" />
 
 </RelativeLayout>

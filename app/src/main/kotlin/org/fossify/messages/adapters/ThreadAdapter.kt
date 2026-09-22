@@ -70,6 +70,7 @@ import org.fossify.messages.extensions.isVideoMimeType
 import org.fossify.messages.extensions.launchViewIntent
 import org.fossify.messages.extensions.startContactDetailsIntent
 import org.fossify.messages.extensions.subscriptionManagerCompat
+import org.fossify.messages.helpers.BankSenderIcon
 import org.fossify.messages.helpers.EXTRA_VCARD_URI
 import org.fossify.messages.helpers.THREAD_DATE_TIME
 import org.fossify.messages.helpers.THREAD_RECEIVED_MESSAGE
@@ -106,7 +107,11 @@ class ThreadAdapter(
         private const val MAX_MEDIA_HEIGHT_RATIO = 3
         private const val SIM_BITS = 21
         private const val SIM_MASK = (1L shl SIM_BITS) - 1
+        private const val COLLAPSED_MAX_LINES = 6
+        private const val EXPANDED_MAX_LINES = Int.MAX_VALUE
     }
+
+    private val expandedMessageIds = HashSet<Long>()
 
     init {
         setupDragListener(true)
@@ -437,20 +442,28 @@ class ThreadAdapter(
     private fun setupView(holder: ViewHolder, view: View, message: Message) {
         ItemMessageBinding.bind(view).apply {
             threadMessageHolder.isSelected = selectedKeys.contains(message.getSelectionKey())
+            val isExpanded = expandedMessageIds.contains(message.id)
             threadMessageBody.apply {
                 text = message.body
                 wrapDsremoSafeUrlSpans(this, message.id)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
                 beVisibleIf(message.body.isNotEmpty())
+                maxLines = if (isExpanded) EXPANDED_MAX_LINES else COLLAPSED_MAX_LINES
+                ellipsize = android.text.TextUtils.TruncateAt.END
                 setOnLongClickListener {
                     holder.viewLongClicked()
                     true
                 }
 
                 setOnClickListener {
-                    holder.viewClicked(message)
+                    if (actModeCallback.isSelectable) {
+                        holder.viewClicked(message)
+                    } else {
+                        toggleMessageExpansion(message)
+                    }
                 }
             }
+            setupExpandControl(threadMessageBody, threadMessageExpand, message)
 
             if (message.isReceivedMessage()) {
                 setupReceivedMessageView(messageBinding = this, message = message)
@@ -489,8 +502,9 @@ class ThreadAdapter(
 
             threadMessageSenderPhoto.beVisible()
             threadMessageSenderPhoto.setOnClickListener {
-                val contact = message.getSender()!!
-                activity.getContactFromAddress(contact.phoneNumbers.first().normalizedNumber) {
+                val contact = message.getSender() ?: return@setOnClickListener
+                val firstNumber = contact.phoneNumbers.firstOrNull()?.normalizedNumber ?: return@setOnClickListener
+                activity.getContactFromAddress(firstNumber) {
                     if (it != null) {
                         activity.startContactDetailsIntent(it)
                     }
@@ -504,20 +518,25 @@ class ThreadAdapter(
             }
 
             if (!activity.isFinishing && !activity.isDestroyed) {
-                val contactLetterIcon = SimpleContactsHelper(activity).getContactLetterIcon(message.senderName)
-                val placeholder = contactLetterIcon.toDrawable(activity.resources)
+                val bankIconRes = BankSenderIcon.iconFor(message.senderPhoneNumber, message.senderName)
+                if (bankIconRes != null && message.senderPhotoUri.isNullOrBlank()) {
+                    threadMessageSenderPhoto.setImageResource(bankIconRes)
+                } else {
+                    val contactLetterIcon = SimpleContactsHelper(activity).getContactLetterIcon(message.senderName)
+                    val placeholder = contactLetterIcon.toDrawable(activity.resources)
 
-                val options = RequestOptions()
-                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
-                    .error(placeholder)
-                    .centerCrop()
+                    val options = RequestOptions()
+                        .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                        .error(placeholder)
+                        .centerCrop()
 
-                Glide.with(activity)
-                    .load(message.senderPhotoUri)
-                    .placeholder(placeholder)
-                    .apply(options)
-                    .apply(RequestOptions.circleCropTransform())
-                    .into(threadMessageSenderPhoto)
+                    Glide.with(activity)
+                        .load(message.senderPhotoUri)
+                        .placeholder(placeholder)
+                        .apply(options)
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(threadMessageSenderPhoto)
+                }
             }
         }
     }
@@ -693,6 +712,45 @@ class ThreadAdapter(
         ItemThreadSendingBinding.bind(view).threadSending.apply {
             setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
             setTextColor(textColor)
+        }
+    }
+
+    private fun toggleMessageExpansion(message: Message) {
+        val messageId = message.id
+        if (expandedMessageIds.contains(messageId)) {
+            expandedMessageIds.remove(messageId)
+        } else {
+            expandedMessageIds.add(messageId)
+        }
+        val position = currentList.indexOfFirst { (it as? Message)?.id == messageId }
+        if (position >= 0) {
+            notifyItemChanged(position)
+        }
+    }
+
+    private fun setupExpandControl(
+        bodyTextView: android.widget.TextView,
+        expandTextView: android.widget.TextView,
+        message: Message
+    ) {
+        val isExpanded = expandedMessageIds.contains(message.id)
+        bodyTextView.post {
+            val overflows = bodyTextView.layout?.let { textLayout ->
+                (0 until textLayout.lineCount).any { textLayout.getEllipsisCount(it) > 0 }
+            } ?: false
+            val shouldShow = overflows || isExpanded
+            if (!shouldShow) {
+                expandTextView.beGone()
+                return@post
+            }
+            expandTextView.beVisible()
+            expandTextView.text = activity.getString(
+                if (isExpanded) R.string.dsremo_expand_show_less else R.string.dsremo_expand_show_more
+            )
+            expandTextView.setTextColor(activity.getProperPrimaryColor())
+            expandTextView.setOnClickListener {
+                toggleMessageExpansion(message)
+            }
         }
     }
 

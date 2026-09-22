@@ -3,6 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:installLocation="auto">
 
+    <!-- dsremo cloud backup: required for OAuth + S3 round-trip -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.WRITE_SMS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
@@ -36,7 +40,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_launcher_name"
         android:roundIcon="@mipmap/ic_launcher"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="false">
 
         <activity
             android:name=".activities.SplashActivity"
@@ -70,11 +75,11 @@
             android:parentActivityName=".activities.MainActivity" />
 
         <activity
-            android:name=".activities.DsremoFilteredActivity"
+            android:name=".activities.DsremoRulesActivity"
             android:configChanges="orientation"
             android:exported="false"
-            android:label="@string/dsremo_show_filtered"
-            android:parentActivityName=".activities.MainActivity" />
+            android:label="@string/dsremo_rules_title"
+            android:parentActivityName=".activities.SettingsActivity" />
 
         <activity
             android:name=".activities.ThreadActivity"
@@ -107,7 +112,13 @@
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:mimeType="*/*" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="text/x-vcard" />
+                <data android:mimeType="text/vcard" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+                <data android:mimeType="audio/*" />
+                <data android:mimeType="application/pdf" />
             </intent-filter>
 
             <intent-filter>
