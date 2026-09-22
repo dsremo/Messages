@@ -52,6 +52,14 @@ class DsremoFilteredActivity : SimpleActivity() {
             setNavigationIcon(org.fossify.commons.R.drawable.ic_arrow_left_vector)
             setNavigationOnClickListener { finish() }
             navigationIcon?.setTint(getProperTextColor())
+            inflateMenu(R.menu.menu_dsremo_filtered)
+            menu?.findItem(R.id.dsremo_reclassify_all)?.icon?.setTint(getProperTextColor())
+            setOnMenuItemClickListener { menuItem ->
+                if (menuItem.itemId == R.id.dsremo_reclassify_all) {
+                    reclassifyAllMessages()
+                    true
+                } else false
+            }
         }
 
         val rootLayout = LinearLayout(this).apply {
@@ -76,6 +84,53 @@ class DsremoFilteredActivity : SimpleActivity() {
 
         title = getString(R.string.dsremo_show_filtered)
         loadAndRender()
+    }
+
+    private fun reclassifyAllMessages() {
+        android.widget.Toast.makeText(
+            this,
+            getString(R.string.dsremo_reclassify_started),
+            android.widget.Toast.LENGTH_SHORT,
+        ).show()
+        ensureBackgroundThread {
+            var scanned = 0
+            var changed = 0
+            val cursor = runCatching {
+                contentResolver.query(
+                    Telephony.Sms.CONTENT_URI,
+                    arrayOf(
+                        Telephony.Sms._ID,
+                        Telephony.Sms.ADDRESS,
+                        Telephony.Sms.BODY,
+                    ),
+                    null, null, null,
+                )
+            }.getOrNull()
+            cursor?.use { messageCursor ->
+                while (messageCursor.moveToNext()) {
+                    val messageId = messageCursor.getLong(0)
+                    val address = messageCursor.getString(1).orEmpty()
+                    val body = messageCursor.getString(2).orEmpty()
+                    if (address.isBlank() || body.isBlank()) continue
+                    scanned++
+                    val previous = FraudVerdictStore.get(this, messageId)
+                    val next = FraudFilter.classify(this, address, body)
+                    if (previous == null || previous.category != next.category) {
+                        FraudVerdictStore.save(this, messageId, next)
+                        changed++
+                    }
+                }
+            }
+            runOnUiThread {
+                android.widget.Toast.makeText(
+                    this,
+                    getString(R.string.dsremo_reclassify_done_format, scanned, changed),
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
+                container.removeAllViews()
+                loadAndRender()
+            }
+        }
     }
 
     private fun loadAndRender() {

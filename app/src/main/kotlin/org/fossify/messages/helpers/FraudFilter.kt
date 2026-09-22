@@ -137,7 +137,7 @@ object FraudFilter {
         "(?i)\\b(send|reply|message|whatsapp|wa)\\b\\s+(\"?hi\"?|hello|join)\\b.{0,30}?\\b(\\+?\\d{10,15})\\b"
     )
     private val P_FAKE_SHOPPING = Pattern.compile(
-        "(?i)\\b(amazn|flipkrt|amaz0n|flipkar+t|am4zon|fl1pkart|myntr4|myntr@|shopcl[u0]es)\\b"
+        "(?i)\\b(amaz0n|am4zon|fl1pkart|fl1pkrt|myntr4|myntr@|shopcl0es)\\b"
     )
     private val P_NEFT_KYC_SCAM = Pattern.compile(
         "(?i)\\b(NEFT|RTGS|IMPS|UPI|netbanking)\\b.{0,30}?\\b(update|expire|reactivate|verify|suspend|block|frozen)\\b"

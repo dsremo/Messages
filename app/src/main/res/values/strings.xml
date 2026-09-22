@@ -195,4 +195,7 @@
         Haven't found some strings? There's more at
         https://github.com/FossifyOrg/Commons/tree/master/commons/src/main/res
     -->
+    <string name="dsremo_reclassify_all">Re-classify all messages</string>
+    <string name="dsremo_reclassify_started">Re-classifying messages…</string>
+    <string name="dsremo_reclassify_done_format">Re-classified %1$d messages (%2$d changed)</string>
 </resources>
