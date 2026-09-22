@@ -217,53 +217,66 @@ object FraudFilter {
             }
             else -> Unit
         }
-        if (DltHeader.isRawMobile(senderAddress) && P_BANK_LANGUAGE.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.RAW_MOBILE_BANK) &&
+            DltHeader.isRawMobile(senderAddress) && P_BANK_LANGUAGE.matcher(body).find()) {
             score += 60
             reasons.add("Raw mobile sender impersonating bank/UPI")
         }
-        if (header.isCommercialPromotional && P_BANK_LANGUAGE.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.SUFFIX_MISMATCH) &&
+            header.isCommercialPromotional && P_BANK_LANGUAGE.matcher(body).find()) {
             score += 50
             reasons.add("Promotional header but banking/KYC language (suffix mismatch)")
         }
 
-        if (P_SHORTENER.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.SHORTENER) &&
+            P_SHORTENER.matcher(body).find()) {
             score += 25
             reasons.add("Contains URL shortener")
         }
-        if (P_SUSPICIOUS_TLD.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.SUSPICIOUS_TLD) &&
+            P_SUSPICIOUS_TLD.matcher(body).find()) {
             score += 50
             reasons.add("Suspicious TLD (.top/.xyz/.click/etc.)")
         }
-        if (P_APK_EXT.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.APK_TRAP) &&
+            P_APK_EXT.matcher(body).find()) {
             score += 90
             reasons.add("Mentions APK file (malware-drop pattern)")
         }
-        if (P_URL_ONLY_BODY.matcher(body.trim()).matches()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.URL_ONLY_BODY) &&
+            P_URL_ONLY_BODY.matcher(body.trim()).matches()) {
             score += 35
             reasons.add("Body is a bare URL")
         }
 
-        if (P_REFUND_KEYWORDS.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.UPI_REFUND_SCAM) &&
+            P_REFUND_KEYWORDS.matcher(body).find()) {
             score += 70
             reasons.add("UPI 'refund / wrong transfer' scam pattern")
         }
-        if (P_PARCEL_SCAM.matcher(body).find() && P_ANY_URL.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.PARCEL_SCAM) &&
+            P_PARCEL_SCAM.matcher(body).find() && P_ANY_URL.matcher(body).find()) {
             score += 60
             reasons.add("Parcel / courier scam + URL")
         }
-        if (P_ELECTRICITY_SCAM.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.ELECTRICITY_SCAM) &&
+            P_ELECTRICITY_SCAM.matcher(body).find()) {
             score += 70
             reasons.add("Electricity disconnect scam pattern")
         }
-        if (P_TASK_JOB_SCAM.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.TASK_JOB_SCAM) &&
+            P_TASK_JOB_SCAM.matcher(body).find()) {
             score += 60
             reasons.add("Earn-daily / task scam pattern")
         }
-        if (P_OTP_SHARE_FRAUD_RECIPIENT.matcher(body).find() && !P_OTP_SHARE_NEGATION.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.OTP_SHARE_FRAUD) &&
+            P_OTP_SHARE_FRAUD_RECIPIENT.matcher(body).find() &&
+            !P_OTP_SHARE_NEGATION.matcher(body).find()) {
             score += 80
             reasons.add("'Share OTP with X' fraud pattern (recipient present)")
         }
-        if (P_CBI_ARREST.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.CBI_ARREST) &&
+            P_CBI_ARREST.matcher(body).find()) {
             score += 80
             reasons.add("Digital-arrest / CBI threat pattern")
         }
@@ -304,22 +317,27 @@ object FraudFilter {
             reasons.add("Fake voter-id/election-card scam")
         }
 
-        var marketingHits = 0
-        val marketingMatcher = P_MARKETING_WORDS.matcher(body)
-        while (marketingMatcher.find()) marketingHits++
-        if (marketingHits > 0) {
-            score += (marketingHits * 12).coerceAtMost(40)
-            reasons.add("Marketing words x$marketingHits")
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.MARKETING_WORDS)) {
+            var marketingHits = 0
+            val marketingMatcher = P_MARKETING_WORDS.matcher(body)
+            while (marketingMatcher.find()) marketingHits++
+            if (marketingHits > 0) {
+                score += (marketingHits * 12).coerceAtMost(40)
+                reasons.add("Marketing words x$marketingHits")
+            }
         }
-        if (P_RS_AMOUNT_OFFER.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.RS_AMOUNT_OFFER) &&
+            P_RS_AMOUNT_OFFER.matcher(body).find()) {
             score += 30
             reasons.add("Money-amount + offer language")
         }
-        if (P_TANDC.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.TANDC) &&
+            P_TANDC.matcher(body).find()) {
             score += 20
             reasons.add("'T&C apply' advertiser tell")
         }
-        if (P_UNSUBSCRIBE.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.UNSUBSCRIBE) &&
+            P_UNSUBSCRIBE.matcher(body).find()) {
             score += 25
             reasons.add("Has 'unsubscribe' / STOP-to-shortcode tell")
         }
@@ -328,13 +346,15 @@ object FraudFilter {
                 "someone\\s+(else|tried)|report\\s+(this|fraud)|" +
                 "आप\\s+नहीं\\?|अनधिकृत)\\b"
         )
-        if (P_CLICK_HERE.matcher(body).find() && !hasSecurityContext.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.CLICK_HERE) &&
+            P_CLICK_HERE.matcher(body).find() && !hasSecurityContext.matcher(body).find()) {
             score += 15
             reasons.add("'Click here / tap below' language")
         }
 
         val urgencyMatcher = P_URGENCY.matcher(body)
-        if (urgencyMatcher.find() && P_ANY_URL.matcher(body).find() && P_SUSPICIOUS_TLD.matcher(body).find()) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.URGENCY_URL) &&
+            urgencyMatcher.find() && P_ANY_URL.matcher(body).find() && P_SUSPICIOUS_TLD.matcher(body).find()) {
             score += 20
             reasons.add("Urgency language + URL on suspicious TLD (scam-funnel pattern)")
         }
@@ -343,7 +363,7 @@ object FraudFilter {
         val asciiLetterWords = words.filter { wordTok ->
             wordTok.length > 2 && wordTok.any { ch -> ch in 'A'..'Z' || ch in 'a'..'z' }
         }
-        if (asciiLetterWords.size >= 6) {
+        if (DsremoRuleToggles.isEnabled(context, DsremoRuleToggles.Rule.ALL_CAPS) && asciiLetterWords.size >= 6) {
             val capsCount = asciiLetterWords.count { wordTok ->
                 val asciiChars = wordTok.filter { ch -> ch in 'A'..'Z' || ch in 'a'..'z' }
                 asciiChars.length >= 2 && asciiChars == asciiChars.uppercase()

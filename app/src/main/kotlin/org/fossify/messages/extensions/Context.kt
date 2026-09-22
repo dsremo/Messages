@@ -146,7 +146,7 @@ fun Context.getMessages(
         }
 
         val id = cursor.getLongValue(Sms._ID)
-        val body = cursor.getStringValue(Sms.BODY)
+        val body = cursor.getStringValue(Sms.BODY) ?: ""
         val type = cursor.getIntValue(Sms.TYPE)
         val namePhoto = getNameAndPhotoFromPhoneNumber(senderNumber)
         val senderName = namePhoto.name
@@ -512,13 +512,13 @@ fun Context.getMmsAttachment(id: Long): MessageAttachment {
     var attachmentCount = 0
     queryCursor(uri, projection, selection, selectionArgs, showErrors = true) { cursor ->
         val partId = cursor.getLongValue(Mms._ID)
-        val mimetype = cursor.getStringValue(Mms.Part.CONTENT_TYPE)
+        val mimetype = cursor.getStringValue(Mms.Part.CONTENT_TYPE) ?: ""
         if (mimetype == "text/plain") {
             messageAttachment.text = cursor
                 .getStringValue(Mms.Part.TEXT)
                 ?.take(MAX_MESSAGE_LENGTH)
                 .orEmpty()
-        } else if (mimetype.startsWith("image/") || mimetype.startsWith("video/")) {
+        } else if (mimetype.startsWith("image/") || mimetype.startsWith("video/") || mimetype.startsWith("audio/") || mimetype.startsWith("application/")) {
             val fileUri = Uri.withAppendedPath(uri, partId.toString())
             messageAttachment.attachments.add(
                 Attachment(
@@ -867,8 +867,14 @@ fun Context.deleteConversation(threadId: Long) {
         e.printStackTrace()
     }
 
+    val threadMessageIds = try {
+        messagesDB.getThreadMessages(threadId).map { it.id }
+    } catch (_: Exception) {
+        emptyList()
+    }
     conversationsDB.deleteThreadId(threadId)
     messagesDB.deleteThreadMessages(threadId)
+    threadMessageIds.forEach { org.fossify.messages.helpers.FraudVerdictStore.clear(this, it) }
     MessagingCache.participantsCache.remove(threadId)
 
     if (config.customNotifications.contains(threadId.toString())) {
@@ -968,6 +974,7 @@ fun Context.deleteMessage(id: Long, isMMS: Boolean) {
     try {
         contentResolver.delete(uri, selection, selectionArgs)
         messagesDB.delete(id)
+        org.fossify.messages.helpers.FraudVerdictStore.clear(this, id)
     } catch (e: Exception) {
         showErrorToast(e)
     }
@@ -1033,8 +1040,10 @@ fun Context.markThreadMessagesUnread(threadId: Long) {
 fun Context.getThreadId(address: String): Long {
     return try {
         Threads.getOrCreateThreadId(this, address)
-    } catch (_: Exception) {
-        0L
+    } catch (err: Exception) {
+        android.util.Log.w("getThreadId", "Failed for '$address', synthesizing per-address bucket", err)
+        val addressHashSuffix = address.hashCode().toLong() and 0x7FFF_FFFFL
+        -(addressHashSuffix + 1L)
     }
 }
 
