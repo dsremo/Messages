@@ -867,8 +867,16 @@ fun Context.deleteConversation(threadId: Long) {
         e.printStackTrace()
     }
 
+    val threadMessageIds = try {
+        messagesDB.getThreadMessages(threadId).map { message -> message.id }
+    } catch (_: Exception) {
+        emptyList()
+    }
     conversationsDB.deleteThreadId(threadId)
     messagesDB.deleteThreadMessages(threadId)
+    threadMessageIds.forEach { messageId ->
+        org.fossify.messages.helpers.BlockedMessageStore.clear(this, messageId)
+    }
     MessagingCache.participantsCache.remove(threadId)
 
     if (config.customNotifications.contains(threadId.toString())) {
@@ -968,6 +976,7 @@ fun Context.deleteMessage(id: Long, isMMS: Boolean) {
     try {
         contentResolver.delete(uri, selection, selectionArgs)
         messagesDB.delete(id)
+        org.fossify.messages.helpers.BlockedMessageStore.clear(this, id)
     } catch (e: Exception) {
         showErrorToast(e)
     }

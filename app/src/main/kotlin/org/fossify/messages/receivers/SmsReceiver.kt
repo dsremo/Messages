@@ -90,7 +90,8 @@ class SmsReceiver : BroadcastReceiver() {
                     date = date,
                     threadId = threadId,
                     subscriptionId = subscriptionId,
-                    status = status
+                    status = status,
+                    looksLikeOtp = looksLikeOtp,
                 )
             } finally {
                 pending.finish()
@@ -108,7 +109,8 @@ class SmsReceiver : BroadcastReceiver() {
         threadId: Long,
         type: Int = Telephony.Sms.MESSAGE_TYPE_INBOX,
         subscriptionId: Int,
-        status: Int
+        status: Int,
+        looksLikeOtp: Boolean = false,
     ) {
         val photoUri = SimpleContactsHelper(context).getPhotoUriFromPhoneNumber(address)
         val bitmap = context.getNotificationBitmap(photoUri)
@@ -128,6 +130,25 @@ class SmsReceiver : BroadcastReceiver() {
             DsremoOtpDetector.scheduleDeletion(
                 context, threadId, newMessageId, DSREMO_OTP_DELETE_MINUTES
             )
+        }
+
+        if (!looksLikeOtp) {
+            val hosts = org.fossify.messages.helpers.DsremoUrlExtractor.extractHosts(body)
+            for (host in hosts) {
+                if (org.fossify.messages.helpers.DsremoUrlBlocklist.contains(context, host)) {
+                    org.fossify.messages.helpers.BlockedMessageStore.save(
+                        context,
+                        newMessageId,
+                        org.fossify.messages.helpers.BlockedMessageStore.Entry(
+                            host = host,
+                            source = org.fossify.messages.helpers.DsremoUrlBlocklist.sourceName(context),
+                            timestamp = System.currentTimeMillis(),
+                        )
+                    )
+                    Log.w("DsremoSms", "blocked-url host=$host in msg=$newMessageId")
+                    break
+                }
+            }
         }
 
         context.getConversations(threadId).firstOrNull()?.let { conv ->

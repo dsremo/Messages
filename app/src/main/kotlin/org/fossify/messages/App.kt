@@ -11,6 +11,7 @@ import org.fossify.commons.helpers.PERMISSION_READ_CONTACTS
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.messages.extensions.rescheduleAllScheduledMessages
 import org.fossify.messages.helpers.MessagingCache
+import org.fossify.messages.workers.DsremoBlocklistRefreshWorker
 
 class App : FossifyApp() {
     override val isAppLockFeatureAvailable = true
@@ -33,6 +34,8 @@ class App : FossifyApp() {
         ensureBackgroundThread {
             rescheduleAllScheduledMessages()
         }
+
+        DsremoBlocklistRefreshWorker.schedule(this)
     }
 
     private val contactsObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {

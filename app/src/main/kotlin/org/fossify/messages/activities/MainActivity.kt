@@ -222,6 +222,7 @@ class MainActivity : SimpleActivity() {
             when (menuItem.itemId) {
                 R.id.show_recycle_bin -> launchRecycleBin()
                 R.id.show_archived -> launchArchivedConversations()
+                R.id.dsremo_show_blocked -> launchBlockedUrls()
                 R.id.settings -> launchSettings()
                 R.id.about -> launchAbout()
                 else -> return@setOnMenuItemClickListener false
@@ -702,6 +703,11 @@ class MainActivity : SimpleActivity() {
     private fun launchSettings() {
         hideKeyboard()
         startActivity(Intent(applicationContext, SettingsActivity::class.java))
+    }
+
+    private fun launchBlockedUrls() {
+        hideKeyboard()
+        startActivity(Intent(applicationContext, DsremoBlockedActivity::class.java))
     }
 
     private fun launchAbout() {

@@ -171,6 +171,14 @@
     <string name="dsremo_unmute_conversation">Unmute conversation</string>
     <string name="dsremo_conversation_muted">Conversation muted</string>
     <string name="dsremo_conversation_unmuted">Conversation unmuted</string>
+    <string name="dsremo_show_blocked">Blocked URLs</string>
+    <string name="dsremo_blocked_title">Blocked URLs</string>
+    <string name="dsremo_blocked_empty">No blocked messages</string>
+    <string name="dsremo_blocked_open_thread">OPEN THREAD</string>
+    <string name="dsremo_blocked_ignore">IGNORE</string>
+    <string name="dsremo_blocked_source_line">Source: %1$s · %2$s</string>
+    <string name="dsremo_refresh_blocklist_now">Refresh blocklist now</string>
+    <string name="dsremo_refresh_blocklist_started">Refreshing blocklist…</string>
     <!--
         Haven't found some strings? There's more at
         https://github.com/FossifyOrg/Commons/tree/master/commons/src/main/res

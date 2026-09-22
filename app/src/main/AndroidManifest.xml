@@ -68,6 +68,11 @@
             android:parentActivityName=".activities.MainActivity" />
 
         <activity
+            android:name=".activities.DsremoBlockedActivity"
+            android:exported="false"
+            android:parentActivityName=".activities.MainActivity" />
+
+        <activity
             android:name=".activities.ThreadActivity"
             android:configChanges="orientation"
             android:exported="false"
