@@ -212,7 +212,7 @@ object FraudFilter {
                 reasons.add("DLT suffix -P (Promotional)")
             }
             DltHeader.Category.SERVICE -> {
-                score += 25
+                score += 15
                 reasons.add("DLT suffix -S (Service)")
             }
             else -> Unit
@@ -323,7 +323,12 @@ object FraudFilter {
             score += 25
             reasons.add("Has 'unsubscribe' / STOP-to-shortcode tell")
         }
-        if (P_CLICK_HERE.matcher(body).find()) {
+        val hasSecurityContext = Pattern.compile(
+            "(?i)\\b(not\\s+you\\?|unauthorized|unusual\\s+(login|activity)|log\\s+out|" +
+                "someone\\s+(else|tried)|report\\s+(this|fraud)|" +
+                "आप\\s+नहीं\\?|अनधिकृत)\\b"
+        )
+        if (P_CLICK_HERE.matcher(body).find() && !hasSecurityContext.matcher(body).find()) {
             score += 15
             reasons.add("'Click here / tap below' language")
         }
